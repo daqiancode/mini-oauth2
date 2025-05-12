@@ -1,0 +1,21 @@
+[project]
+name = "mini-oauth2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "bcrypt>=4.3.0",
+    "captcha>=0.7.1",
+    "cryptography>=44.0.3",
+    "fastapi[standard]>=0.115.12",
+    "httpx>=0.28.1",
+    "psycopg2-binary>=2.9.10",
+    "pydantic-settings>=2.9.1",
+    "pyjwt>=2.10.1",
+    "redis[hiredis]>=6.0.0",
+    "sqlalchemy>=2.0.40",
+    "uvicorn>=0.34.2",
+]
+[tool.setuptools.packages.find]
+where = ["."]
