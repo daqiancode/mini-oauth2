@@ -123,11 +123,8 @@ class Users:
             return user.id
         
     def list(self, ids:list[int]):
+        print('----->>>>ids', ids)
         with db_readonly() as session:
             rs= session.query(*query_keys).filter(User.id.in_(ids)).all()
             return [row._asdict() for row in rs]
 
-
-
-if __name__ == "__main__":
-    print(Users().signup('test',"test1@test.com", "test"))
