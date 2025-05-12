@@ -47,7 +47,7 @@ app.include_router(passwords_router, prefix="/password/reset")
 
 @app.get("/.well-known/openid-configuration")
 async def configuration():
-    prefix = settings.EXTERNAL_HOST+settings.ROOT_PATH
+    prefix = settings.EXTERNAL_HOST+(settings.ROOT_PATH if settings.ROOT_PATH else "")
     return {
         "issuer": f"{prefix}",
         "authorization_endpoint": f"{prefix}/signin",
