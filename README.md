@@ -2,6 +2,13 @@
 
 mini-oauth2 is a simple OAuth 2.0 server implementation. mini-oauth2 is a JWT certification issuer(authorization center). user can authorize client by local username/password or social account(google, github, apple).
 
+## How to use
+1. Install, config(.env file) & run mini-oauth2
+2. Add client with API on http://localhost:3000/docs
+3. User OAuth2 service like this:
+ - Google login: `http://localhost:3000/signin/google?response_type=code&redirect_uri={to}&client_id={client_id}&state={state}`
+ - Local login: `http://localhost:3000/signin?response_type=code&redirect_uri={to}&client_id={client_id}&state={state}`
+
 ## Features
 - [x] Simple
 - [x] Seamless social account authorization(google, github, apple)
