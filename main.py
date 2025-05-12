@@ -47,20 +47,21 @@ app.include_router(passwords_router, prefix="/password/reset")
 
 @app.get("/.well-known/openid-configuration")
 async def configuration():
+    prefix = settings.EXTERNAL_HOST+settings.ROOT_PATH
     return {
-        "issuer": f"{settings.EXTERNAL_HOST}/",
-        "authorization_endpoint": f"{settings.EXTERNAL_HOST}/signin",
-        "token_endpoint": f"{settings.EXTERNAL_HOST}/token",
-        "userinfo_endpoint": f"{settings.EXTERNAL_HOST}/userinfo",
+        "issuer": f"{prefix}",
+        "authorization_endpoint": f"{prefix}/signin",
+        "token_endpoint": f"{prefix}/token",
+        "userinfo_endpoint": f"{prefix}/userinfo",
         # 'revocation_endpoint': f"{settings.EXTERNAL_HOST}/revoke",
         'response_modes_supported': ['query', 'fragment', 'form_post'],
         'grant_types_supported': ['authorization_code'],
         'algorithms_supported': ['EdDSA'],
         'subject_types_supported': ['public'],
         'response_types_supported': ['code'],
-        'google_authorization_endpoint': f"{settings.EXTERNAL_HOST}/google/signin",
-        'github_authorization_endpoint': f"{settings.EXTERNAL_HOST}/github/signin",
-        'apple_authorization_endpoint': f"{settings.EXTERNAL_HOST}/apple/signin",
+        'google_authorization_endpoint': f"{prefix}/signin/google",
+        'github_authorization_endpoint': f"{prefix}/signin/github",
+        'apple_authorization_endpoint': f"{prefix}/signin/apple",
     }
 
 if __name__ == "__main__":
