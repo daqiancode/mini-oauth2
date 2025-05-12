@@ -7,7 +7,7 @@ load_dotenv()
 
 class Settings(BaseSettings):
     # API Settings
-    API_V1_STR: str = "/api/v1"
+    ROOT_PATH: str = os.getenv("ROOT_PATH")
     PROJECT_NAME: str = "mini-oauth2"
     PORT: int = os.getenv("PORT", 3000)
     ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "")

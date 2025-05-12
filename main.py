@@ -25,7 +25,7 @@ async def get_api_key(api_key: str = Security(api_key_header)):
 
 # from starlette.middleware.sessions import SessionMiddleware
 
-app = FastAPI()
+app = FastAPI(root_path=settings.ROOT_PATH)
 
 # app.add_middleware(SessionMiddleware, secret_key="!secret")
 
