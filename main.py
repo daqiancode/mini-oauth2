@@ -25,7 +25,7 @@ async def get_api_key(api_key: str = Security(api_key_header)):
 
 # from starlette.middleware.sessions import SessionMiddleware
 
-app = FastAPI(root_path=settings.ROOT_PATH)
+app = FastAPI(root_path=settings.ROOT_PATH, title="Mini OAuth2", description="Mini OAuth2 is a simple OAuth 2.0 server implementation.")
 
 # app.add_middleware(SessionMiddleware, secret_key="!secret")
 
