@@ -37,6 +37,9 @@ docker compose up -d
 # view API docs
 http://localhost:3000/docs
 
+# for development
+uv venv
+source .venv/bin/activate
 uv sync
 uv run uvicorn app.main:app --reload
 
@@ -57,7 +60,7 @@ docker-compose up --build
 
 
 # create JWT key pair
-python app/routers/jwts.py
+python app/utils/jwts.py
 
 # create apple login jwt
 python app/utils/apple_utils.py -t team_id -c client_id -k key_id -p ./AuthKey_key_id.p8

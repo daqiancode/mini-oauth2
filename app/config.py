@@ -5,6 +5,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def ensure_pem_format(key: str, is_private: bool) -> str:
+    if is_private:
+        if not key.startswith("-----"):
+            return '-----BEGIN PRIVATE KEY-----\n'+key+'\n-----END PRIVATE KEY-----'
+    else:
+        if not key.startswith("-----"):
+            return '-----BEGIN PUBLIC KEY-----\n'+key+'\n-----END PUBLIC KEY-----'
+    return key
+
 class Settings(BaseSettings):
     # API Settings
     ROOT_PATH: str = os.getenv("ROOT_PATH")
@@ -16,8 +25,8 @@ class Settings(BaseSettings):
     API_KEY_HEADER: str = "X-API-Key"
     API_KEYS: str = os.getenv("API_KEYS", "")
     #  replace empty string with None
-    JWT_PRIVATE_KEY: str = os.getenv("JWT_PRIVATE_KEY", None)
-    JWT_PUBLIC_KEY: str = os.getenv("JWT_PUBLIC_KEY", None)
+    JWT_PRIVATE_KEY: str = os.getenv("JWT_PRIVATE_KEY", "")
+    JWT_PUBLIC_KEY: str = os.getenv("JWT_PUBLIC_KEY", "")
     JWT_EXPIRES_IN: int = int(os.getenv("JWT_EXPIRES_IN", 24*60))
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "EdDSA")
 
@@ -41,4 +50,7 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 settings = Settings()
+settings.JWT_PRIVATE_KEY = ensure_pem_format(settings.JWT_PRIVATE_KEY, True)
+settings.JWT_PUBLIC_KEY = ensure_pem_format(settings.JWT_PUBLIC_KEY, False)
+
 

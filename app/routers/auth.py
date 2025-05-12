@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from typing import Annotated
 from app.utils.urls import set_url_params
 from app.services.users import Users
-from app.routers.jwts import create_access_token
+from app.utils.jwts import create_access_token
 from app.config import settings
 from app.routers.forms import SigninRequest, redis_prefix, ResponseType, GrantType, set_code,get_code,delete_code
 from app.services.clients import Clients
@@ -81,7 +81,8 @@ def token(form: Annotated[TokenRequest, Form()]):
         return HTTPException(status_code=400, detail="user not found")
     if user.disabled:
         return HTTPException(status_code=400, detail="user disabled")
-    access_token = create_access_token(user.id, user.role)
+    print('private key', settings.JWT_PRIVATE_KEY)
+    access_token = create_access_token(settings.JWT_PRIVATE_KEY, user.id, user.role ,settings.JWT_EXPIRES_IN)
     # issue jwt token
     return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN}
 

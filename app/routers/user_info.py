@@ -5,7 +5,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException
 from app.services.users import Users
 from jwt.exceptions import InvalidTokenError
-from app.routers.jwts import verify_jwt
+from app.utils.jwts import verify_jwt_eddsa
 import logging
 log = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ async def get_user_id(token = Depends(bearer)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = verify_jwt(token, settings.JWT_PUBLIC_KEY)
+        payload = verify_jwt_eddsa(token, settings.JWT_PUBLIC_KEY)
         return payload['sub']
     except InvalidTokenError as e:
         log.error(e)
