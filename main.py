@@ -7,7 +7,7 @@ from fastapi.security import APIKeyHeader
 from fastapi.exceptions import HTTPException
 from fastapi import Security
 from app.config import settings
-
+from fastapi.middleware.cors import CORSMiddleware
 from app.drivers.init_db import init_db
 load_dotenv()
 
@@ -27,7 +27,13 @@ async def get_api_key(api_key: str = Security(api_key_header)):
 
 app = FastAPI(root_path=settings.ROOT_PATH, title="Mini OAuth2", description="Mini OAuth2 is a simple OAuth 2.0 server implementation.")
 
-# app.add_middleware(SessionMiddleware, secret_key="!secret")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 from app.routers.auth import router as auth_router
 from app.routers.clients import router as clients_router

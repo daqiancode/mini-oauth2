@@ -5,11 +5,8 @@ from app.models.models import Client
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from typing import Annotated
-import json
-from app.utils.rands import rand_str
 from app.utils.urls import set_url_params
 from app.services.users import Users
-from app.drivers.cache import redis_client
 from app.routers.jwts import create_access_token
 from app.config import settings
 from app.routers.forms import SigninRequest, redis_prefix, ResponseType, GrantType, set_code,get_code,delete_code
@@ -19,9 +16,8 @@ import logging
 log = logging.getLogger(__name__)
 router = APIRouter(tags=["Auth"])
 
+
 templates = Jinja2Templates(directory="views")
-
-
 
 
 @router.get("/signin" , description="Signin page")
@@ -90,3 +86,10 @@ def token(form: Annotated[TokenRequest, Form()]):
     return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN}
 
 
+# @router.options("/token")
+# def token_options(request: Request):
+#     # CORS allowd Access-Control-Allow-Origin
+#     response = Response(headers={"Access-Control-Allow-Origin": "*"})
+#     response.headers["Access-Control-Allow-Methods"] = "POST"
+#     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+#     return response
