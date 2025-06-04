@@ -2,46 +2,51 @@ from app.drivers.db import db_readonly, db_transaction
 from app.models.models import User, UserSource
 from fastapi.exceptions import HTTPException
 import bcrypt
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+# user fields except password
+query_keys = [User.id, User.name, User.email, User.openid, User.role, User.avatar, User.source, User.disabled, User.created_at, User.updated_at]
 
-
-query_keys = [User.id, User.name, User.email,User.openid,User.role,User.avatar, User.source, User.disabled, User.created_at, User.updated_at]
 
 class Users:
-
-    def signin(self, email: str, password: str):
-        with db_readonly() as session:
-            user = session.query(User).filter(User.email == email).first()
+    async def signin(self, email: str, password: str):
+        async with db_readonly() as session:
+            result = await session.execute(select(User).filter(User.email == email))
+            user = result.scalar_one_or_none()
             if not user:
                 raise Exception("User not found")
             if not self.verify_password(password, user.password):
                 raise Exception("Invalid credentials")
             return user.id
             
-    def signup(self, name:str, email: str, password: str):
-        self.create(name, email, password, )
+    async def signup(self, name: str, email: str, password: str):
+        return await self.create(name, email, password)
 
-    def create(self, name:str, email: str, password: str, role:str=None):
-        with db_transaction() as session:
+    async def create(self, name: str, email: str, password: str, role: str = None):
+        async with db_transaction() as session:
             # check email 
-            if session.query(User).filter(User.email == email).first() is not None:
+            result = await session.execute(select(User).filter(User.email == email))
+            if result.scalar_one_or_none() is not None:
                 raise HTTPException(status_code=400, detail="User already exists")
             user = User(name=name, email=email, password=self.hash_password(password), source=UserSource.local, role=role)
             session.add(user)
-            session.flush()
+            await session.flush()
             user_id = user.id
-        return self.get(user_id)
+        return await self.get(user_id)
 
-    def get_user_by_email(self, email: str):
-        with db_readonly() as session:
-            r = session.query(*query_keys).filter(User.email == email).first()
+    async def get_user_by_email(self, email: str):
+        async with db_readonly() as session:
+            result = await session.execute(select(*query_keys).filter(User.email == email))
+            r = result.first()
             if r:
                 return r._asdict()
             return None
         
-    def check_email_exists(self, email: str):
-        with db_readonly() as session:
-            return session.query(User).filter(User.email == email).first() is not None
+    async def check_email_exists(self, email: str):
+        async with db_readonly() as session:
+            result = await session.execute(select(User).filter(User.email == email))
+            return result.scalar_one_or_none() is not None
 
     def verify_password(self, password: str, hashed_password: str):
         return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
@@ -49,37 +54,45 @@ class Users:
     def hash_password(self, password: str):
         return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
-    def query(self, name:str=None ,email:str=None, page:int=1, page_size:int=10):
-        with db_readonly() as session:
+    async def query(self, name: str = None, email: str = None, page: int = 1, page_size: int = 10):
+        async with db_readonly() as session:
             # query without password field 
-            # Select all fields except password
-            query = session.query(User).with_entities(User.id, User.name, User.email, User.created_at, User.updated_at)
+            query = select(User.id, User.name, User.email, User.created_at, User.updated_at)
             if name:
                 query = query.filter(User.name.like(f"%{name}%"))
             if email:
                 query = query.filter(User.email.like(f"%{email}%"))
             # order by created_at desc
             query = query.order_by(User.created_at.desc())
-            rs = query.offset((page-1)*page_size).limit(page_size).all()
-            # to dict
-            items = [row._asdict() for row in rs]
+            
+            # Get total count
+            count_result = await session.execute(select(User.id).select_from(query.subquery()))
+            total = len(count_result.all())
+            
+            # Get paginated results
+            query = query.offset((page-1)*page_size).limit(page_size)
+            result = await session.execute(query)
+            items = [row._asdict() for row in result.all()]
+            
             return {
                 "items": items,
-                "total": query.count(),
+                "total": total,
                 "page": page,
                 "page_size": page_size
             }
         
-    def delete(self, id:str):
-        with db_transaction() as session:
-            user = session.query(User).filter(User.id == id).first()
+    async def delete(self, id: str):
+        async with db_transaction() as session:
+            result = await session.execute(select(User).filter(User.id == id))
+            user = result.scalar_one_or_none()
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
-            session.delete(user)
+            await session.delete(user)
 
-    def update(self, id:str, name:str, email:str):
-        with db_transaction() as session:
-            user = session.query(User).filter(User.id == id).first()
+    async def update(self, id: str, name: str, email: str):
+        async with db_transaction() as session:
+            result = await session.execute(select(User).filter(User.id == id))
+            user = result.scalar_one_or_none()
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
             if name:
@@ -87,34 +100,34 @@ class Users:
             if email:
                 user.email = email
         
-    def update_password(self, id:str, password:str):
-        with db_transaction() as session:
-            user = session.query(User).filter(User.id == id).first()
+    async def update_password(self, id: str, password: str):
+        async with db_transaction() as session:
+            result = await session.execute(select(User).filter(User.id == id))
+            user = result.scalar_one_or_none()
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
             user.password = self.hash_password(password)
 
-    
-    def get(self, id:str)->User:
-        with db_readonly() as session:
-            # query without password field 
-            # Select all fields except password
-            query = session.query(*query_keys)
-            return query.filter(User.id == id).first()
+    async def get(self, id: int) -> User:
+        async with db_readonly() as session:
+            result = await session.execute(select(*query_keys).filter(User.id == id))
+            return result.first()._asdict()
 
-
-    def save_or_update(self, name:str, avatar:str,email:str=None, openid:str=None , source:str=None):
-        with db_transaction() as session:
-            query = session.query(User)
+    async def save_or_update(self, name: str, avatar: str, email: str = None, openid: str = None, source: str = None):
+        async with db_transaction() as session:
+            query = select(User)
             if email:
                 query = query.filter(User.email == email)
             elif openid:
                 query = query.filter(User.openid == openid)
             else:
                 raise HTTPException(status_code=400, detail="email or openid is required")
-            user = query.first()
+            
+            result = await session.execute(query)
+            user = result.scalar_one_or_none()
+            
             if not user:
-                user = User(name=name, email=email, openid=openid , avatar=avatar, source=source)
+                user = User(name=name, email=email, openid=openid, avatar=avatar, source=source)
                 session.add(user)
             else:
                 user.name = name
@@ -122,8 +135,8 @@ class Users:
                 user.source = source
             return user.id
         
-    def list(self, ids:list[int]):
-        with db_readonly() as session:
-            rs= session.query(*query_keys).filter(User.id.in_(ids)).all()
-            return [row._asdict() for row in rs]
+    async def list(self, ids: list[int]):
+        async with db_readonly() as session:
+            result = await session.execute(select(*query_keys).filter(User.id.in_(ids)))
+            return [row._asdict() for row in result.all()]
 

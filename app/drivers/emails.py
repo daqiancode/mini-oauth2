@@ -1,9 +1,13 @@
 import smtplib
 from email.mime.text import MIMEText
+import asyncio
 
 from app.config import settings
-import ssl
-def send_email(to,subject, body):
+
+async def send_email(to,subject, body):
+    await asyncio.to_thread(send_email_sync, to, subject, body)
+# import ssl
+def send_email_sync(to,subject, body):
     msg = MIMEText(body, 'html')
     msg['Subject'] = subject
     msg['From'] = settings.EMAIL_FROM or settings.EMAIL_USERNAME

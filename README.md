@@ -64,5 +64,11 @@ python app/utils/jwts.py
 
 # create apple login jwt
 python app/utils/apple_utils.py -t team_id -c client_id -k key_id -p ./AuthKey_key_id.p8
+
+
+## alembic
+alembic init -t async alembic
+alembic revision --autogenerate -m "first migration"
+alembic upgrade head
 ```
 

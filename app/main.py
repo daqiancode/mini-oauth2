@@ -8,10 +8,7 @@ from fastapi.exceptions import HTTPException
 from fastapi import Security
 from app.config import settings
 from fastapi.middleware.cors import CORSMiddleware
-from app.drivers.init_db import init_db
-load_dotenv()
 
-init_db()
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 async def get_api_key(api_key: str = Security(api_key_header)):
@@ -53,7 +50,7 @@ app.include_router(passwords_router, prefix="/password/reset")
 
 @app.get("/.well-known/openid-configuration")
 async def configuration():
-    prefix = settings.EXTERNAL_HOST+(settings.ROOT_PATH if settings.ROOT_PATH else "")
+    prefix = settings.EXTERNAL_DOMAIN+(settings.ROOT_PATH if settings.ROOT_PATH else "")
     return {
         "issuer": f"{prefix}",
         "authorization_endpoint": f"{prefix}/signin",
@@ -72,4 +69,9 @@ async def configuration():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run('main:app', host="0.0.0.0", port=settings.PORT , reload=True)
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-p',"--port", type=int, default=3000)
+    parser.add_argument("--reload", type=bool, default=True)
+    args = parser.parse_args()
+    uvicorn.run('app.main:app', host='0.0.0.0', port=args.port , reload=args.reload)

@@ -1,7 +1,5 @@
 from fastapi import APIRouter, Depends, Request,Form,Query,HTTPException
 from pydantic import BaseModel
-from app.drivers.db import get_db
-from app.models.models import Client
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from typing import Annotated
@@ -21,9 +19,9 @@ templates = Jinja2Templates(directory="views")
 
 
 @router.get("/signin" , description="Signin page")
-def signin(request: Request, query: Annotated[SigninRequest, Query()]):
+async def signin(request: Request, query: Annotated[SigninRequest, Query()]):
     #check client_id , response_type , redirect_uri , scope
-    client = Clients().get_client_by_id(query.client_id)
+    client = await Clients().get_client_by_id(query.client_id)
     if not client:
         return HTTPException(status_code=400, detail="client not found")
     if client.disabled:
@@ -42,16 +40,16 @@ class SigninPostRequest(BaseModel):
 
 
 @router.post("/signin" , description="Signin page")
-def signin_post(form: Annotated[SigninPostRequest, Form()], query: Annotated[SigninRequest, Query()], request: Request):
+async def signin_post(form: Annotated[SigninPostRequest, Form()], query: Annotated[SigninRequest, Query()], request: Request):
     # check username, password, MFA
     try:
-        user_id = Users().signin(form.email, form.password)
+        user_id = await Users().signin(form.email, form.password)
     except Exception as e:
         return templates.TemplateResponse("signin.html", {'request': request,'query': encode_url_params(query.model_dump()) , 'error': str(e)})
-    user = Users().get(user_id)
+    user = await Users().get(user_id)
     if user.disabled:
         return templates.TemplateResponse("signin.html", {'request': request,'query': encode_url_params(query.model_dump()) , 'error': 'User disabled'})
-    code= set_code(query.model_dump(), user_id)
+    code = await set_code(query.model_dump(), user_id)
     # expire 10 minutes
 
     # issue code to redis
@@ -66,17 +64,17 @@ class TokenRequest(BaseModel):
     client_secret: str
 
 @router.post("/token" , description="fetch token with code")
-def token(form: Annotated[TokenRequest, Form()]):
+async def token(form: Annotated[TokenRequest, Form()]):
     # check code is valid from redis
     # get client & check
-    code_value = get_code(form.code)
-    delete_code(form.code)
+    code_value = await get_code(form.code)
+    await delete_code(form.code)
     if not code_value:
         return HTTPException(status_code=400, detail="code not found")
     # check redirect_uri is match
     if code_value['context']['redirect_uri'] != form.redirect_uri:
         return HTTPException(status_code=400, detail="redirect_uri not match")
-    user = Users().get(code_value['user_id'])
+    user = await Users().get(code_value['user_id'])
     if not user:
         return HTTPException(status_code=400, detail="user not found")
     if user.disabled:

@@ -26,26 +26,28 @@ from app.config import settings
 from app.utils.rands import rand_str
 
 
-def set_state( context:dict):
+async def set_state(context: dict):
     state = rand_str(16)
-    redis_client.set(auth_prefix + 'state/' + state, json.dumps(context) , ex=60*60*24)
+    await redis_client.set(auth_prefix + 'state/' + state, json.dumps(context), ex=60*60*24)
     return state
 
-def get_state(state:str):
-    return json.loads(redis_client.get(auth_prefix + 'state/' + state))
+async def get_state(state: str):
+    data = await redis_client.get(auth_prefix + 'state/' + state)
+    return json.loads(data) if data else None
 
-def delete_state(state:str):
-    redis_client.delete(auth_prefix + 'state/' + state)
+async def delete_state(state: str):
+    await redis_client.delete(auth_prefix + 'state/' + state)
 
 
-def set_code( context:dict, user_id:int|str):
+async def set_code(context: dict, user_id: int|str):
     code = rand_str(16)
-    redis_client.set(auth_prefix+'code/' + code, json.dumps({'context':context, 'user_id':user_id}) , ex=settings.JWT_EXPIRES_IN)
+    await redis_client.set(auth_prefix+'code/' + code, json.dumps({'context':context, 'user_id':user_id}), ex=settings.JWT_EXPIRES_IN)
     return code
 
 
-def get_code(code:str):
-    return json.loads(redis_client.get(auth_prefix + 'code/' + code))
+async def get_code(code: str):
+    data = await redis_client.get(auth_prefix + 'code/' + code)
+    return json.loads(data) if data else None
 
-def delete_code(code:str):
-    redis_client.delete(auth_prefix + 'code/' + code)
+async def delete_code(code: str):
+    await redis_client.delete(auth_prefix + 'code/' + code)

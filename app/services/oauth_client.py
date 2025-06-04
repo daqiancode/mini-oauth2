@@ -86,6 +86,10 @@ class GithubOAuthClient(OAuthClient):
 class AppleOAuthClient(OAuthClient):
     def __init__(self, client_id: str, client_secret: str, authorize_url: str="https://appleid.apple.com/auth/authorize", access_token_url: str="https://appleid.apple.com/auth/token", userinfo_endpoint: str="https://appleid.apple.com/auth/userinfo", scope:str="email name"):
         super().__init__(client_id, client_secret, authorize_url, access_token_url, userinfo_endpoint, scope)
+        self.authorization_extra_params = {
+            "response_mode": "form_post"
+        }
+
 
     async def get_userinfo(self, access_token:str=None):
         async with httpx.AsyncClient() as client:
@@ -108,6 +112,16 @@ class WechatOAuthClient(OAuthClient):
         }
         params.update(kwargs)
         return set_url_params(self.authorize_url, params)
+
+    async def get_userinfo(self, access_token:str=None):
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(self.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
+            return resp.json()
+    
+
+class LinkedinOAuthClient(OAuthClient):
+    def __init__(self, client_id: str, client_secret: str, authorize_url: str="https://www.linkedin.com/oauth/v2/authorization", access_token_url: str="https://www.linkedin.com/oauth/v2/accessToken", userinfo_endpoint: str="https://api.linkedin.com/v2/me", scope:str="r_liteprofile r_emailaddress"):
+        super().__init__(client_id, client_secret, authorize_url, access_token_url, userinfo_endpoint, scope)
 
     async def get_userinfo(self, access_token:str=None):
         async with httpx.AsyncClient() as client:

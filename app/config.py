@@ -1,9 +1,10 @@
-from pydantic_settings import BaseSettings
-from functools import lru_cache
-import os,re
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+from pydantic import field_validator
 
-load_dotenv()
+# from dotenv import load_dotenv
+
+# load_dotenv()
 
 def ensure_pem_format(key: str, is_private: bool) -> str:
     if is_private:
@@ -15,42 +16,70 @@ def ensure_pem_format(key: str, is_private: bool) -> str:
     return key
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8',case_sensitive=False , extra='ignore')
     # API Settings
     ROOT_PATH: str = os.getenv("ROOT_PATH")
     PROJECT_NAME: str = "mini-oauth2"
-    PORT: int = os.getenv("PORT", 3000)
-    ADMIN_API_KEY: str = os.getenv("ADMIN_API_KEY", "")
-    EXTERNAL_HOST: str = os.getenv("EXTERNAL_HOST", "http://localhost:3000")
+    ADMIN_API_KEY: str | None = None
+    EXTERNAL_DOMAIN: str = "http://localhost:3000"
     # Security
     API_KEY_HEADER: str = "X-API-Key"
-    API_KEYS: str = os.getenv("API_KEYS", "")
+    API_KEYS: list[str] | None = None
     #  replace empty string with None
-    JWT_PRIVATE_KEY: str = os.getenv("JWT_PRIVATE_KEY", "")
-    JWT_PUBLIC_KEY: str = os.getenv("JWT_PUBLIC_KEY", "")
-    JWT_EXPIRES_IN: int = int(os.getenv("JWT_EXPIRES_IN", 24*60))
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "EdDSA")
+    JWT_PRIVATE_KEY: str 
+    JWT_PUBLIC_KEY: str 
+    JWT_EXPIRES_IN: int = 24*60
+    JWT_ALGORITHM: str = "EdDSA"
 
     
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_URL: str ="redis://localhost:6379/0"
     # Database
-    DATABASE_URL: str = os.getenv("POSTGRES_URL", "postgresql://postgres:postgres@localhost:5432/mini_oauth2")
+    DB_URL: str ="postgresql+asyncpg://postgres:postgres@localhost:5431/minioauth2"
     
-    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
-    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    IS_REDIS_CLUSTER: bool = False
 
 
-    EMAIL_HOST: str = os.getenv("EMAIL_HOST", '')
-    EMAIL_PORT: int = os.getenv("EMAIL_PORT", 587)
-    EMAIL_USERNAME: str = os.getenv("EMAIL_USERNAME", '')
-    EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD", '')
-    EMAIL_SSL: bool = os.getenv("EMAIL_SSL", False)
-    EMAIL_FROM: str = os.getenv("EMAIL_FROM",'')
+    EMAIL_HOST: str|None = None
+    EMAIL_PORT: int | None = None
+    EMAIL_USERNAME: str | None = None
+    EMAIL_PASSWORD: str | None = None
+    EMAIL_SSL: bool | None = True
+    EMAIL_FROM: str | None = EMAIL_USERNAME
+
+    GOOGLE_CLIENT_ID: str|None = None
+    GOOGLE_CLIENT_SECRET: str|None = None
+
+    GITHUB_CLIENT_ID: str|None = None
+    GITHUB_CLIENT_SECRET: str|None = None
+
+    APPLE_CLIENT_ID: str|None = None
+    APPLE_CLIENT_SECRET: str|None = None
+
+    WECHAT_APPID: str|None = None
+    WECHAT_APPSECRET: str|None = None
+
+    LINKEDIN_CLIENT_ID: str|None = None
+    LINKEDIN_CLIENT_SECRET: str|None = None
+
+
+    @field_validator("API_KEYS",mode="before")
+    @classmethod
+    def validate_api_keys(cls, v:str)->list[str]:
+        if v is None:
+            return []
+        return v.split(",")
     
-    class Config:
-        case_sensitive = True
 
+    
 settings = Settings()
 settings.JWT_PRIVATE_KEY = ensure_pem_format(settings.JWT_PRIVATE_KEY, True)
 settings.JWT_PUBLIC_KEY = ensure_pem_format(settings.JWT_PUBLIC_KEY, False)
+env = settings
+
+import logging
+logging.basicConfig(level=logging.INFO)
+# set log format
+logging.getLogger().handlers[0].setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
 
+log = logging.getLogger(__name__)

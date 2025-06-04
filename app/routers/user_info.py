@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["User Info"])
 
-bearer = OAuth2AuthorizationCodeBearer(authorizationUrl=f"{settings.EXTERNAL_HOST}/signin", tokenUrl=f"{settings.EXTERNAL_HOST}/token")
+bearer = OAuth2AuthorizationCodeBearer(authorizationUrl=f"{settings.EXTERNAL_DOMAIN}/signin", tokenUrl=f"{settings.EXTERNAL_DOMAIN}/token")
 
 async def get_user_id(token = Depends(bearer)):
     credentials_exception = HTTPException(
@@ -21,17 +21,16 @@ async def get_user_id(token = Depends(bearer)):
     )
     try:
         payload = verify_jwt_eddsa(token, settings.JWT_PUBLIC_KEY)
-        return payload['sub']
+        return int(payload['sub'])
     except InvalidTokenError as e:
         log.error(e)
         raise credentials_exception
 
-
-@router.get("/userinfo" , description="Get user info")
-def userinfo(user_id = Depends(get_user_id)):
-    user = Users().get(user_id)
+@router.get("/userinfo", description="Get user info")
+async def userinfo(user_id = Depends(get_user_id)):
+    user = await Users().get(user_id)
     if user:
-        return user._asdict()
+        return user
     else:
         raise HTTPException(status_code=401, detail="Unauthorized")
 

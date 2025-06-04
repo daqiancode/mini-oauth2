@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request,Form,Query
+from fastapi import APIRouter, Depends, Request,Form,Query,HTTPException
 from pydantic import BaseModel
 from app.drivers.db import get_db
 from app.models.models import Client
@@ -11,9 +11,9 @@ from app.services.clients import Clients
 router = APIRouter(tags=["Clients"])
 
 @router.get("/clients" , description="Get clients")
-def get_clients(request: Request, db: Session = Depends(get_db)):
+async def get_clients(request: Request, db: Session = Depends(get_db)):
     #order by created_at desc
-    return Clients().query()
+    return await Clients().query()
 
 class ClientPost(BaseModel):
     name: str
@@ -23,23 +23,25 @@ class ClientPost(BaseModel):
     description: str|None
 
 @router.post("/clients" , description="Create client")
-def create_client(form:ClientPost):
-    return Clients().create(form.name, form.allowed_domains, form.logo, form.client_url, form.description)
-
+async def create_client(form:ClientPost):
+    return await Clients().create(form.name, form.allowed_domains, form.logo, form.client_url, form.description)
 
 @router.get("/clients/{id}" , description="Get client")
-def get_client(id:str):
-    return Clients().get_client_by_id(id)
+async def get_client(id:str):
+    client = await Clients().get_client_by_id(id)
+    if client:
+        return client
+    else:
+        raise HTTPException(status_code=404, detail="Client not found")
 
 class ClientPut(BaseModel):
     name: str
     allowed_domains: list[str]
 
 @router.put("/clients/{id}" , description="Update client")
-def update_client(id:str, form:ClientPut):
-    return Clients().update(id, form.name, form.allowed_domains)
-
+async def update_client(id:str, form:ClientPut):
+    return await Clients().update(id, form.name, form.allowed_domains)
 
 @router.delete("/clients/{id}" , description="Delete client")
-def delete_client(id:str):
-    return Clients().delete(id)
+async def delete_client(id:str):
+    return await Clients().delete(id)

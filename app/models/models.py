@@ -6,6 +6,7 @@ class UserSource:
     github = "github"
     apple = "apple"
     wechat = "wechat"
+    linkedin = "linkedin"
     local = "local"
 
 # oauth client
