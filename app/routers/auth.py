@@ -54,7 +54,7 @@ async def signin_post(form: Annotated[SigninPostRequest, Form()], query: Annotat
 
     # issue code to redis
     # redirect to redirect_uri with code
-    return RedirectResponse(set_url_params(query.redirect_uri, {"code": code,'state':query.state}))
+    return RedirectResponse(set_url_params(query.redirect_uri, {"code": code,'state':query.state} , remove_none=False))
 
 class TokenRequest(BaseModel):
     grant_type: GrantType
@@ -79,7 +79,6 @@ async def token(form: Annotated[TokenRequest, Form()]):
         return HTTPException(status_code=400, detail="user not found")
     if user.disabled:
         return HTTPException(status_code=400, detail="user disabled")
-    print('private key', settings.JWT_PRIVATE_KEY)
     access_token = create_access_token(settings.JWT_PRIVATE_KEY, user.id, user.role ,settings.JWT_EXPIRES_IN)
     # issue jwt token
     return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN}

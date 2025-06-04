@@ -18,8 +18,10 @@ async def signin_via_google(request: Request, qs: Annotated[SigninRequest, Query
     log.info("signin google: %s", qs.model_dump())
     redirect_uri = request.url_for('callback_via_google')
     redirect_uri = replace_url_host(str(redirect_uri), env.EXTERNAL_DOMAIN)
+    log.info("/signin/google - redirect_uri: %s", redirect_uri)
     state = await set_state(qs.model_dump())
     google_oauth = GoogleOAuthClient(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET)
+    log.info("/signin/google - google_oauth.get_authorize_url: %s", google_oauth.get_authorize_url(redirect_uri, state))
     return RedirectResponse(google_oauth.get_authorize_url(redirect_uri, state))
 
 @router.get("/callback/google")

@@ -71,7 +71,7 @@ if __name__ == "__main__":
     import uvicorn
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p',"--port", type=int, default=3000)
+    parser.add_argument('-p',"--port", type=int, default=4000)
     parser.add_argument("--reload", type=bool, default=True)
     args = parser.parse_args()
     uvicorn.run('app.main:app', host='0.0.0.0', port=args.port , reload=args.reload)

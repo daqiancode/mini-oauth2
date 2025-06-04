@@ -25,7 +25,7 @@ RUN uv sync
 # USER appuser
 
 # Expose the port the app runs on
-EXPOSE 3000
+EXPOSE 4000
 # Command to run the application
 # CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "3000"]
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "3000"]
+CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "4000"]

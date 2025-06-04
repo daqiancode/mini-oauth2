@@ -111,7 +111,8 @@ class Users:
     async def get(self, id: int) -> User:
         async with db_readonly() as session:
             result = await session.execute(select(*query_keys).filter(User.id == id))
-            return result.first()._asdict()
+            r = result.one_or_none()
+            return User(**r._asdict()) if r else None
 
     async def save_or_update(self, name: str, avatar: str, email: str = None, openid: str = None, source: str = None):
         async with db_transaction() as session:
