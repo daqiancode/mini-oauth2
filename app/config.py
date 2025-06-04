@@ -6,15 +6,6 @@ from pydantic import field_validator
 
 # load_dotenv()
 
-def ensure_pem_format(key: str, is_private: bool) -> str:
-    if is_private:
-        if not key.startswith("-----"):
-            return '-----BEGIN PRIVATE KEY-----\n'+key+'\n-----END PRIVATE KEY-----'
-    else:
-        if not key.startswith("-----"):
-            return '-----BEGIN PUBLIC KEY-----\n'+key+'\n-----END PUBLIC KEY-----'
-    return key
-
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8',case_sensitive=False , extra='ignore')
     # API Settings
@@ -69,11 +60,8 @@ class Settings(BaseSettings):
             return []
         return v.split(",")
     
-
     
 settings = Settings()
-settings.JWT_PRIVATE_KEY = ensure_pem_format(settings.JWT_PRIVATE_KEY, True)
-settings.JWT_PUBLIC_KEY = ensure_pem_format(settings.JWT_PUBLIC_KEY, False)
 env = settings
 
 import logging

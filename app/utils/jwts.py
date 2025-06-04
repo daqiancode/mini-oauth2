@@ -19,9 +19,13 @@ def generate_eddsa_keypair():
 
 
 def sign_jwt_eddsa(payload: dict, private_key_pem: str) -> str:
+    if not private_key_pem.startswith("----"):
+        private_key_pem = f"-----BEGIN PRIVATE KEY-----\n{private_key_pem}\n-----END PRIVATE KEY-----"
     return jwt.encode(payload, private_key_pem, algorithm="EdDSA")
 
 def verify_jwt_eddsa(token: str, public_key_pem: str) -> dict:
+    if not public_key_pem.startswith("----"):
+        public_key_pem = f"-----BEGIN PUBLIC KEY-----\n{public_key_pem}\n-----END PUBLIC KEY-----"
     return jwt.decode(token, public_key_pem, algorithms=["EdDSA"])
 
 def create_access_token(private_key: str , user_id: str , role: str ,duration_minutes: int,**kwargs):
