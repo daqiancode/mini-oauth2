@@ -7,6 +7,7 @@ from app.services.users import Users
 from jwt.exceptions import InvalidTokenError
 from app.utils.jwts import verify_jwt_eddsa
 import logging
+from pydantic import BaseModel
 log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["User Info"])
@@ -34,3 +35,26 @@ async def userinfo(user_id = Depends(get_user_id)):
     else:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
+class UserPut(BaseModel):
+    name: str|None = None
+    avatar: str|None = None
+
+@router.put("/userinfo", description="Modify user info")
+async def modify_userinfo(user_id = Depends(get_user_id), user: UserPut = Depends(UserPut)):
+    await Users().update(user_id, user.name, user.email, user.role)
+    return {"result": "OK"}
+
+class UserPasswordPut(BaseModel):
+    old_password: str
+    password: str
+
+@router.put("/userinfo/password", description="Modify user password")
+async def modify_userinfo_password(user_id = Depends(get_user_id), password: UserPasswordPut = Depends(UserPasswordPut)):
+    await Users().update_password_with_old_password(user_id, password.old_password, password.password)
+    return {"result": "OK"}
+
+
+@router.delete("/userinfo", description="Delete user")
+async def delete_userinfo(user_id = Depends(get_user_id)):
+    await Users().delete(user_id)
+    return {"result": "OK"}

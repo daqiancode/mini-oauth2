@@ -41,7 +41,7 @@ async def delete_state(state: str):
 
 async def set_code(context: dict, user_id: int|str):
     code = rand_str(16)
-    await redis_client.set(auth_prefix+'code/' + code, json.dumps({'context':context, 'user_id':user_id}), ex=settings.JWT_EXPIRES_IN)
+    await redis_client.set(auth_prefix+'code/' + code, json.dumps({'context':context, 'user_id':user_id}), ex=settings.JWT_EXPIRES_IN_HOURS * 60 * 60)
     return code
 
 

@@ -16,6 +16,8 @@ class Users:
             user = result.scalar_one_or_none()
             if not user:
                 raise Exception("User not found")
+            if user.disabled:
+                raise Exception("User disabled")
             if not self.verify_password(password, user.password):
                 raise Exception("Invalid credentials")
             return user.id
@@ -57,7 +59,7 @@ class Users:
     async def query(self, name: str = None, email: str = None, page: int = 1, page_size: int = 10):
         async with db_readonly() as session:
             # query without password field 
-            query = select(User.id, User.name, User.email, User.created_at, User.updated_at)
+            query = select(*query_keys)
             if name:
                 query = query.filter(User.name.like(f"%{name}%"))
             if email:
@@ -89,7 +91,7 @@ class Users:
                 raise HTTPException(status_code=404, detail="User not found")
             await session.delete(user)
 
-    async def update(self, id: str, name: str, email: str):
+    async def update(self, id: str, name: str=None, email: str=None, role: str=None , disabled: bool=None, avatar: str=None):
         async with db_transaction() as session:
             result = await session.execute(select(User).filter(User.id == id))
             user = result.scalar_one_or_none()
@@ -99,6 +101,13 @@ class Users:
                 user.name = name
             if email:
                 user.email = email
+            if role:
+                user.role = role
+            if disabled:
+                user.disabled = disabled
+            if avatar:
+                user.avatar = avatar
+            return user.id
         
     async def update_password(self, id: str, password: str):
         async with db_transaction() as session:
@@ -107,6 +116,17 @@ class Users:
             if not user:
                 raise HTTPException(status_code=404, detail="User not found")
             user.password = self.hash_password(password)
+
+    async def update_password_with_old_password(self, id: str, old_password: str, password: str):
+        async with db_transaction() as session:
+            result = await session.execute(select(User).filter(User.id == id))
+            user = result.scalar_one_or_none()
+            if not user:
+                raise HTTPException(status_code=404, detail="User not found")
+            if not self.verify_password(old_password, user.password):
+                raise HTTPException(status_code=400, detail="Invalid old password")
+            user.password = self.hash_password(password)
+            
 
     async def get(self, id: int) -> User:
         async with db_readonly() as session:

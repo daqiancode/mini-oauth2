@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     #  replace empty string with None
     JWT_PRIVATE_KEY: str 
     JWT_PUBLIC_KEY: str 
-    JWT_EXPIRES_IN: int = 24*60
+    JWT_EXPIRES_IN_HOURS: int = 24
     JWT_ALGORITHM: str = "EdDSA"
 
     

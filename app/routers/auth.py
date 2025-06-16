@@ -79,9 +79,9 @@ async def token(form: Annotated[TokenRequest, Form()]):
         return HTTPException(status_code=400, detail="user not found")
     if user.disabled:
         return HTTPException(status_code=400, detail="user disabled")
-    access_token = create_access_token(settings.JWT_PRIVATE_KEY, user.id, user.role ,settings.JWT_EXPIRES_IN)
+    access_token = create_access_token(settings.JWT_PRIVATE_KEY, user.id, user.role ,settings.JWT_EXPIRES_IN_HOURS * 60 * 60)
     # issue jwt token
-    return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN}
+    return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN_HOURS * 60 * 60}
 
 
 # @router.options("/token")

@@ -7,7 +7,7 @@ from fastapi.responses import RedirectResponse
 from typing import Annotated, List
 from sqlalchemy.orm import Session
 from app.services.users import Users
-router = APIRouter(tags=["Users"])
+router = APIRouter(tags=["Admin Users"])
 
 class UserGet(BaseModel):
     name: str = None
@@ -41,8 +41,11 @@ async def get_user_password(ids: str):
     return await Users().list(ids)
 
 class UserPut(BaseModel):
-    name: str
-    email: str
+    name: str|None = None
+    email: str|None = None
+    role: str|None = None
+    disabled: bool|None = None
+    avatar: str|None = None
 
 class UserPasswordPut(BaseModel):
     password: str
@@ -59,7 +62,7 @@ async def delete_user(id: int):
 
 @router.put("/users/{id}", description="Update user")
 async def update_user(id: int, user: UserPut):
-    await Users().update(id, user.name, user.email)
+    await Users().update(id, user.name, user.email, user.role)
     return "OK"
 
 @router.get("/users/{id}", description="Get user")
