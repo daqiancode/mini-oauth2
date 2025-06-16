@@ -48,10 +48,11 @@ sudo docker run --name redis1 -d -p 6379:6379 redis
 
 
 # Build the image
-docker build -t mini-oauth2 .
+docker build -t daqiancode/mini-oauth2:0.0.1 .
 
 # Run the container
-docker run -p 3000:3000 --rm --env-file .env mini-oauth2
+docker run -p 3000:3000 --rm --env-file .env daqiancode/mini-oauth2:0.0.1
+docker push daqiancode/mini-oauth2:0.0.1
 
 # rebuild
 docker-compose down

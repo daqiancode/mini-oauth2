@@ -1,5 +1,7 @@
 # Use Python 3.12 slim image as base
 FROM python:3.12-slim
+RUN useradd -m appuser
+USER appuser
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 # Set working directory

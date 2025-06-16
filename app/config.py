@@ -9,10 +9,10 @@ from pydantic import field_validator
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8',case_sensitive=False , extra='ignore')
     # API Settings
-    ROOT_PATH: str = os.getenv("ROOT_PATH")
+    ROOT_PATH: str | None = None
     PROJECT_NAME: str = "mini-oauth2"
     ADMIN_API_KEY: str | None = None
-    EXTERNAL_DOMAIN: str = "http://localhost:3000"
+    EXTERNAL_DOMAIN: str
     # Security
     API_KEY_HEADER: str = "X-API-Key"
     API_KEYS: list[str] | None = None
@@ -23,9 +23,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "EdDSA"
 
     
-    REDIS_URL: str ="redis://localhost:6379/0"
+    REDIS_URL: str
     # Database
-    DB_URL: str ="postgresql+asyncpg://postgres:postgres@localhost:5431/minioauth2"
+    DB_URL: str 
     
     IS_REDIS_CLUSTER: bool = False
 

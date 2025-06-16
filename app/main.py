@@ -8,7 +8,9 @@ from fastapi.exceptions import HTTPException
 from fastapi import Security
 from app.config import settings
 from fastapi.middleware.cors import CORSMiddleware
-
+from contextlib import asynccontextmanager
+import asyncio
+from app.drivers.db import create_db_if_not_exists
 
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 async def get_api_key(api_key: str = Security(api_key_header)):
@@ -20,9 +22,19 @@ async def get_api_key(api_key: str = Security(api_key_header)):
             detail="Invalid or missing API Key",
         )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_db_if_not_exists()
+    await asyncio.create_subprocess_shell("uv run alembic upgrade head")
+    yield
+
+
+
 # from starlette.middleware.sessions import SessionMiddleware
 
-app = FastAPI(root_path=settings.ROOT_PATH, title="Mini OAuth2", description="Mini OAuth2 is a simple OAuth 2.0 server implementation.")
+app = FastAPI(root_path=settings.ROOT_PATH, title="Mini OAuth2", description="Mini OAuth2 is a simple OAuth 2.0 server implementation." , lifespan=lifespan)
+
+
 
 app.add_middleware(
     CORSMiddleware,
