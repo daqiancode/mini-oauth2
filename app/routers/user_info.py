@@ -41,7 +41,7 @@ class UserPut(BaseModel):
 
 @router.put("/userinfo", description="Modify user info")
 async def modify_userinfo(user_id = Depends(get_user_id), user: UserPut = Depends(UserPut)):
-    await Users().update(user_id, user.name, user.email, user.role)
+    await Users().update(user_id, user.name, user.email, user.roles)
     return {"result": "OK"}
 
 class UserPasswordPut(BaseModel):

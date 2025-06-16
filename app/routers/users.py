@@ -22,11 +22,11 @@ class UserPost(BaseModel):
     name: str
     email: str
     password: str
-    role: str
+    roles: str
 
 @router.post("/users", description="Create user")
 async def create_user(user: UserPost):
-    return await Users().create(user.name, user.email, user.password, user.role)
+    return await Users().create(user.name, user.email, user.password, user.roles)
 
 class UserBatchGet(BaseModel):
     id: list[int]
@@ -43,7 +43,7 @@ async def get_user_password(ids: str):
 class UserPut(BaseModel):
     name: str|None = None
     email: str|None = None
-    role: str|None = None
+    roles: str|None = None
     disabled: bool|None = None
     avatar: str|None = None
 
@@ -53,17 +53,17 @@ class UserPasswordPut(BaseModel):
 @router.put("/users/{id}/password", description="Update user password")
 async def update_user_password(id: int, password: UserPasswordPut):
     await Users().update_password(id, password.password)
-    return "OK"
+    return {"result": "OK"}
 
 @router.delete("/users/{id}", description="Delete user")
 async def delete_user(id: int):
     await Users().delete(id)
-    return "OK"
+    return  {"result": "OK"}
 
 @router.put("/users/{id}", description="Update user")
 async def update_user(id: int, user: UserPut):
-    await Users().update(id, user.name, user.email, user.role)
-    return "OK"
+    await Users().update(id, user.name, user.email, user.roles, user.disabled, user.avatar)
+    return {"result": "OK"}
 
 @router.get("/users/{id}", description="Get user")
 async def get_user(id: int):

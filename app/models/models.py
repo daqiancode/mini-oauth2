@@ -27,7 +27,7 @@ class User(BaseModel):
     email = Column(String(100) , unique=True)
     openid = Column(String(100) , unique=True) # if there is not email, use openid as unique identifier
     password = Column(String(100))
-    role = Column(String(100))
+    roles = Column(String(200))
     avatar = Column(String(200))
     disabled = Column(Boolean, default=False)
     source = Column(String(30)) # google, github, apple, wechat

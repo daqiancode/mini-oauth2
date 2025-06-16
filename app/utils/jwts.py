@@ -28,13 +28,13 @@ def verify_jwt_eddsa(token: str, public_key_pem: str) -> dict:
         public_key_pem = f"-----BEGIN PUBLIC KEY-----\n{public_key_pem}\n-----END PUBLIC KEY-----"
     return jwt.decode(token, public_key_pem, algorithms=["EdDSA"])
 
-def create_access_token(private_key: str , user_id: str , role: str ,duration_minutes: int,**kwargs):
+def create_access_token(private_key: str , user_id: str , roles: str ,duration_minutes: int,**kwargs):
     payload = {
         "sub": str(user_id),
         "exp": datetime.datetime.now() + datetime.timedelta(minutes=duration_minutes)
     }
-    if role:
-        payload['role'] = role
+    if roles:
+        payload['roles'] = roles
     if kwargs:
         payload.update(kwargs)
     return sign_jwt_eddsa(payload,private_key)

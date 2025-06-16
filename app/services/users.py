@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # user fields except password
-query_keys = [User.id, User.name, User.email, User.openid, User.role, User.avatar, User.source, User.disabled, User.created_at, User.updated_at]
+query_keys = [User.id, User.name, User.email, User.openid, User.roles, User.avatar, User.source, User.disabled, User.created_at, User.updated_at]
 
 
 class Users:
@@ -25,13 +25,13 @@ class Users:
     async def signup(self, name: str, email: str, password: str):
         return await self.create(name, email, password)
 
-    async def create(self, name: str, email: str, password: str, role: str = None):
+    async def create(self, name: str, email: str, password: str, roles: str = None):
         async with db_transaction() as session:
             # check email 
             result = await session.execute(select(User).filter(User.email == email))
             if result.scalar_one_or_none() is not None:
                 raise HTTPException(status_code=400, detail="User already exists")
-            user = User(name=name, email=email, password=self.hash_password(password), source=UserSource.local, role=role)
+            user = User(name=name, email=email, password=self.hash_password(password), source=UserSource.local, roles=roles)
             session.add(user)
             await session.flush()
             user_id = user.id
@@ -91,7 +91,7 @@ class Users:
                 raise HTTPException(status_code=404, detail="User not found")
             await session.delete(user)
 
-    async def update(self, id: str, name: str=None, email: str=None, role: str=None , disabled: bool=None, avatar: str=None):
+    async def update(self, id: str, name: str=None, email: str=None, roles: str=None , disabled: bool=None, avatar: str=None):
         async with db_transaction() as session:
             result = await session.execute(select(User).filter(User.id == id))
             user = result.scalar_one_or_none()
@@ -101,8 +101,8 @@ class Users:
                 user.name = name
             if email:
                 user.email = email
-            if role:
-                user.role = role
+            if roles:
+                user.roles = roles
             if disabled:
                 user.disabled = disabled
             if avatar:
