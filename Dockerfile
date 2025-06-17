@@ -1,23 +1,18 @@
 # Use Python 3.12 slim image as base
 FROM python:3.12-slim
-RUN useradd -m appuser
-USER appuser
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+RUN useradd -m appuser
+USER appuser
 # Set working directory
 WORKDIR /app
 
-# Copy dependency files
-COPY pyproject.toml .
-COPY uv.lock .
-
-# Install Python dependencies
-# RUN uv sync
-# Copy application code
-COPY app app
-COPY views views
-COPY alembic alembic
-COPY alembic.ini alembic.ini
+COPY --chown=appuser:appuser pyproject.toml .
+COPY --chown=appuser:appuser uv.lock .
+COPY --chown=appuser:appuser app app
+COPY --chown=appuser:appuser views views
+COPY --chown=appuser:appuser alembic alembic
+COPY --chown=appuser:appuser alembic.ini alembic.ini
 RUN uv sync 
 # RUN source .venv/bin/activate
 # RUN uv pip install -e .

@@ -23,13 +23,13 @@ async def signin(request: Request, query: Annotated[SigninRequest, Query()]):
     #check client_id , response_type , redirect_uri , scope
     client = await Clients().get_client_by_id(query.client_id)
     if not client:
-        return HTTPException(status_code=400, detail="client not found")
+        raise HTTPException(status_code=400, detail="client not found")
     if client.disabled:
-        return HTTPException(status_code=400, detail="client disabled")
+        raise HTTPException(status_code=400, detail="client disabled")
     if query.response_type != ResponseType.code:
-        return HTTPException(status_code=400, detail="response_type not supported")
+        raise HTTPException(status_code=400, detail="response_type not supported")
     if not check_url_in_domains(query.redirect_uri, client.allowed_domains):
-        return HTTPException(status_code=400, detail="redirect_uri not allowed")
+        raise HTTPException(status_code=400, detail="redirect_uri not allowed")
     # render signin page
     return templates.TemplateResponse("signin.html", {'request': request,'query': encode_url_params(query.model_dump()), 'client': client})
 
@@ -70,18 +70,18 @@ async def token(form: Annotated[TokenRequest, Form()]):
     code_value = await get_code(form.code)
     await delete_code(form.code)
     if not code_value:
-        return HTTPException(status_code=400, detail="code not found")
+        raise HTTPException(status_code=400, detail="code not found")
     # check redirect_uri is match
     if code_value['context']['redirect_uri'] != form.redirect_uri:
-        return HTTPException(status_code=400, detail="redirect_uri not match")
+        raise HTTPException(status_code=400, detail="redirect_uri not match")
     user = await Users().get(code_value['user_id'])
     if not user:
-        return HTTPException(status_code=400, detail="user not found")
+        raise HTTPException(status_code=400, detail="user not found")
     if user.disabled:
-        return HTTPException(status_code=400, detail="user disabled")
-    access_token = create_access_token(settings.JWT_PRIVATE_KEY, user.id, user.roles ,settings.JWT_EXPIRES_IN_HOURS * 60 * 60)
+        raise HTTPException(status_code=400, detail="user disabled")
+    access_token = create_access_token(settings.JWT_PRIVATE_KEY, user.id, user.roles ,settings.JWT_EXPIRES_IN_HOURS * 60)
     # issue jwt token
-    return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN_HOURS * 60 * 60}
+    return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN_HOURS * 60}
 
 
 # @router.options("/token")
