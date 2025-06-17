@@ -15,8 +15,8 @@ class SocialIdTokenRequest(BaseModel):
     access_token: str
     provider: str # google, apple, facebook, twitter, github, linkedin, wechat, qq, weibo, alipay
 
-@router.post("/social/user", description="Login with social access_token")
-async def social_id_token(request: Request , form: SocialIdTokenRequest = Depends(SocialIdTokenRequest)):
+@router.post("/social/user", description="Login with social access_token and return mini-oauth2 access_token(jwt)")
+async def social_id_token(request: Request , body: SocialIdTokenRequest):
     if request.provider == "google":
         user = await GoogleOAuthClient(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET).get_userinfo(request.id_token)
     elif request.provider == "apple":
