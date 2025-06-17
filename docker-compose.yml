@@ -2,22 +2,24 @@ version: '3.9'
 
 services:
   app:
-    build: .
+    image: daqiancode/mini-oauth2:0.0.1
     ports:
-      - "3000:3000"
+      - "4000:4000"
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/minioauth2
+      - DB_URL=postgresql+asyncpg://postgres:postgres@db:5432/minioauth2
       - REDIS_URL=redis://redis:6379/0
+      - EXTERNAL_DOMAIN=http://localhost:4000
+      - ADMIN_API_KEY=123
     depends_on:
       - db
       - redis
     deploy:
       restart_policy:
         condition: on-failure
-        delay: 3s
-        max_attempts: 6
+        delay: 5s
+        max_attempts: 10
         window: 120s
     networks:
       - mini-oauth2-network
@@ -28,19 +30,15 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=minioauth2
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+    # ports:
+    #   - "5432:5432"
     networks:
       - mini-oauth2-network
 
   redis:
     image: redis:8-alpine
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+    # ports:
+    #   - "6379:6379"
     networks:
       - mini-oauth2-network
 

@@ -51,6 +51,7 @@ from app.routers.user_info import router as user_info_router
 from app.routers.signup import router as signup_router
 from app.routers.social_login import router as social_login_router
 from app.routers.passwords import router as passwords_router
+from app.routers.social_user import router as social_user_router
 
 app.include_router(auth_router)
 app.include_router(clients_router , dependencies=[Depends(get_api_key)])
@@ -59,6 +60,7 @@ app.include_router(user_info_router)
 app.include_router(signup_router)
 app.include_router(social_login_router)
 app.include_router(passwords_router, prefix="/password/reset")
+app.include_router(social_user_router)
 
 @app.get("/.well-known/openid-configuration")
 async def configuration():

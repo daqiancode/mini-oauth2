@@ -54,7 +54,7 @@ async def modify_userinfo_password(user_id = Depends(get_user_id), password: Use
     return {"result": "OK"}
 
 
-@router.delete("/userinfo", description="Delete user")
-async def delete_userinfo(user_id = Depends(get_user_id)):
-    await Users().delete(user_id)
-    return {"result": "OK"}
+# @router.delete("/userinfo", description="Delete user")
+# async def delete_userinfo(user_id = Depends(get_user_id)):
+#     await Users().delete(user_id)
+#     return {"result": "OK"}
