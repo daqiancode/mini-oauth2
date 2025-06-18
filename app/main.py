@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import FastAPI, Depends, APIRouter
+from fastapi import FastAPI, Depends, APIRouter, Response
 from dotenv import load_dotenv
 import os
 from fastapi import Request
@@ -80,6 +80,10 @@ async def configuration():
         'github_authorization_endpoint': f"{prefix}/signin/github",
         'apple_authorization_endpoint': f"{prefix}/signin/apple",
     }
+
+@app.get("/health", tags=["Health"])
+async def health():
+    return Response(status_code=200 , content="OK")
 
 if __name__ == "__main__":
     import uvicorn

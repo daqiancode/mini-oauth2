@@ -41,8 +41,10 @@ def create_access_token(private_key: str , user_id: str , roles: str ,duration_m
 
 if __name__ == "__main__":
     private_key , public_key = generate_eddsa_keypair()
-    print(private_key)
-    print(public_key)
-    # token = sign_jwt_eddsa({"sub": "1234567890"}, private_key)
-    # print(token)
-    # print(verify_jwt_eddsa(token, public_key))
+    # print(private_key)
+    # print(public_key)
+    private_key = "MC4CAQAwBQYDK2VwBCIEIKVNdtg8lUarPg2q+83Pbz0UE1b9mbj4/+6ueT3ycBbX"
+    public_key = "MCowBQYDK2VwAyEAal2xVFt6m/CeDCGCRs+ElFD5N6OukKGGlSgaATbr4DY="
+    # token = sign_jwt_eddsa({"sub": "1"}, private_key)
+    token = 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzUxMTA3NTU3fQ.howVK_EnU2rgS2FcvJktqxSsctAR_MWDCBiOHZwQCB4cjixqyzzg6zjwHJrs735UgyDHoOxpmN1W_SF58YrrAg'
+    print(verify_jwt_eddsa(token, public_key))

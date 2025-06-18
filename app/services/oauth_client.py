@@ -1,6 +1,9 @@
 import httpx
 from app.utils.urls import set_url_params
 from fastapi import HTTPException
+import logging
+logger = logging.getLogger(__name__)
+
 class OAuthClient:
     def __init__(self, client_id: str, client_secret: str, authorize_url: str, access_token_url: str, userinfo_endpoint: str, scope:str=None):
         self.client_id = client_id
@@ -99,8 +102,9 @@ class AppleOAuthClient(OAuthClient):
 
 
 class WechatOAuthClient(OAuthClient):
-    def __init__(self, client_id: str, client_secret: str, authorize_url: str="https://open.weixin.qq.com/connect/qrconnect", access_token_url: str="https://api.weixin.qq.com/sns/oauth2/access_token", userinfo_endpoint: str="https://api.weixin.qq.com/sns/userinfo", scope:str="snsapi_login"):
+    def __init__(self, client_id: str, client_secret: str, authorize_url: str="https://open.weixin.qq.com/connect/qrconnect", access_token_url: str="https://api.weixin.qq.com/sns/oauth2/access_token", userinfo_endpoint: str="https://api.weixin.qq.com/sns/userinfo", scope:str="snsapi_login" , lang:str="zh_CN"):
         super().__init__(client_id, client_secret, authorize_url, access_token_url, userinfo_endpoint, scope)
+        self.lang = lang
 
     def get_authorize_url(self ,redirect_uri:str, state:str , **kwargs):
         params = {
@@ -108,14 +112,27 @@ class WechatOAuthClient(OAuthClient):
             "redirect_uri": redirect_uri,
             "response_type": "code",
             "scope": self.scope,
-            "state": state
+            "state": state,
+            "lang": self.lang
         }
         params.update(kwargs)
-        return set_url_params(self.authorize_url, params)
+        return set_url_params(self.authorize_url, params)+"#wechat_redirect"
+    
+    async def get_access_token(self, code:str, redirect_uri:str=None):
+        data = {
+            'appid': self.client_id,
+            'secret': self.client_secret,
+            'grant_type': 'authorization_code',
+            "code": code
+        }
+        async with httpx.AsyncClient(headers={"Accept": "application/json"}) as client:
+            resp = await client.post(self.access_token_url, data=data)
+            return resp.json()
 
-    async def get_userinfo(self, access_token:str=None):
+    async def get_userinfo(self, access_token:str=None ,openid:str=None):
         async with httpx.AsyncClient() as client:
-            resp = await client.get(self.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
+            resp = await client.get(self.userinfo_endpoint, params={"openid": openid , "access_token": access_token, "lang": self.lang})
+            logger.info("wechat userinfo: %s", resp.json())
             return resp.json()
     
 

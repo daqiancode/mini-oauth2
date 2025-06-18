@@ -118,3 +118,29 @@ async def callback_via_linkedin(request: Request):
     return RedirectResponse(set_url_params(context['redirect_uri'], {"code": code, 'state': context['state']}))
 
     
+@router.get("/signin/wechat")
+async def signin_via_wechat(request: Request, qs: Annotated[SigninRequest, Query()]):
+    log.info("signin wechat: %s", qs.model_dump())
+    redirect_uri = request.url_for('callback_via_wechat')
+    redirect_uri = replace_url_host(str(redirect_uri), env.EXTERNAL_DOMAIN)
+    state = await set_state(qs.model_dump())
+    wechat_oauth = WechatOAuthClient(env.WECHAT_APPID, env.WECHAT_APPSECRET)
+    return RedirectResponse(wechat_oauth.get_authorize_url(redirect_uri, state))
+
+@router.get("/callback/wechat")
+async def callback_via_wechat(request: Request):
+    log.info("callback wechat: %s", request.query_params)
+    state = request.query_params.get('state')
+    context = await get_state(state)
+    await delete_state(state)
+    wechat_oauth = WechatOAuthClient(env.WECHAT_APPID, env.WECHAT_APPSECRET)
+    redirect_uri = request.url_for('callback_via_wechat')
+    redirect_uri = replace_url_host(str(redirect_uri), env.EXTERNAL_DOMAIN)
+    log.info("wechat redirect_uri: %s", redirect_uri)
+    token = await wechat_oauth.get_access_token(request.query_params.get('code'), redirect_uri)
+    log.info("wechat token: %s", token)
+    user = await wechat_oauth.get_userinfo(token['access_token'], request.query_params.get('openid'))
+    log.info("wechat user: %s", user)
+    user_id = await Users().save_or_update(user['name'], user['picture'], email=user['email'], source=UserSource.wechat)
+    code = await set_code(context, user_id)
+    return RedirectResponse(set_url_params(context['redirect_uri'], {"code": code, 'state': context['state']}))
