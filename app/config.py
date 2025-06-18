@@ -48,9 +48,12 @@ class Settings(BaseSettings):
 
     WECHAT_APPID: str|None = None
     WECHAT_APPSECRET: str|None = None
+    WECHAT_MP_FILE:str|None = None
+    WECHAT_MP_FILE_CONTENT:str|None = None
 
     LINKEDIN_CLIENT_ID: str|None = None
     LINKEDIN_CLIENT_SECRET: str|None = None
+
 
 
     @field_validator("API_KEYS",mode="before")

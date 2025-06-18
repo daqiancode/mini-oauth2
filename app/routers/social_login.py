@@ -141,6 +141,6 @@ async def callback_via_wechat(request: Request):
     log.info("wechat token: %s", token)
     user = await wechat_oauth.get_userinfo(token['access_token'], request.query_params.get('openid'))
     log.info("wechat user: %s", user)
-    user_id = await Users().save_or_update(user['name'], user['picture'], email=user['email'], source=UserSource.wechat)
+    user_id = await Users().save_or_update(user['nickname'], user['headimgurl'], openid=user['openid'], source=UserSource.wechat)
     code = await set_code(context, user_id)
     return RedirectResponse(set_url_params(context['redirect_uri'], {"code": code, 'state': context['state']}))

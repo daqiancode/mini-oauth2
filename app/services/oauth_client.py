@@ -130,6 +130,20 @@ class WechatOAuthClient(OAuthClient):
             return resp.json()
 
     async def get_userinfo(self, access_token:str=None ,openid:str=None):
+        '''
+        https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
+        {   
+            "openid": "OPENID",
+            "nickname": NICKNAME,
+            "sex": 1,
+            "province":"PROVINCE",
+            "city":"CITY",
+            "country":"COUNTRY",
+            "headimgurl":"https://thirdwx.qlogo.cn/mmopen/g3MonUZtNHkdmzicIlibx6iaFqAc56vxLSUfpb6n5WKSYVY0ChQKkiaJSgQ1dZuTOgvLLrhJbERQQ4eMsv84eavHiaiceqxibJxCfHe/46",
+            "privilege":[ "PRIVILEGE1" "PRIVILEGE2"     ],
+            "unionid": "o6_bmasdasdsad6_2sgVt7hMZOPfL"
+        }
+        '''
         async with httpx.AsyncClient() as client:
             resp = await client.get(self.userinfo_endpoint, params={"openid": openid , "access_token": access_token, "lang": self.lang})
             logger.info("wechat userinfo: %s", resp.json())
