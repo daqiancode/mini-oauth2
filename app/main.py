@@ -87,6 +87,10 @@ async def configuration():
 async def health():
     return Response(status_code=200 , content="OK")
 
+@app.get("/")
+async def root():
+    return Response(status_code=200 , content="Welcome")
+
 if __name__ == "__main__":
     import uvicorn
     import argparse
