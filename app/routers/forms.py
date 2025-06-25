@@ -51,3 +51,11 @@ async def get_code(code: str):
 
 async def delete_code(code: str):
     await redis_client.delete(auth_prefix + 'code/' + code)
+
+
+async def put_invalid_jti(jti: str , expires_in_seconds: int = settings.JWT_EXPIRES_IN_HOURS * 60 * 60):
+    await redis_client.set(auth_prefix + 'invalid_jti/' + jti, '1', ex=expires_in_seconds)
+
+async def get_invalid_jti(jti: str)->bool:
+    data = await redis_client.get(auth_prefix + 'invalid_jti/' + jti)
+    return data == b'1'

@@ -7,9 +7,11 @@ from app.utils.urls import set_url_params
 from app.services.users import Users
 from app.utils.jwts import create_access_token
 from app.config import settings
-from app.routers.forms import SigninRequest, redis_prefix, ResponseType, GrantType, set_code,get_code,delete_code
+from app.routers.forms import SigninRequest, redis_prefix, ResponseType, GrantType, set_code,get_code,delete_code,put_invalid_jti,get_invalid_jti
 from app.services.clients import Clients
 from app.utils.urls import encode_url_params, check_url_in_domains
+from app.routers.dependencies import jwt_bearer, get_jwt_payload
+from datetime import datetime, timezone
 import logging
 log = logging.getLogger(__name__)
 router = APIRouter(tags=["Auth"])
@@ -91,3 +93,29 @@ async def token(form: Annotated[TokenRequest, Form()]):
 #     response.headers["Access-Control-Allow-Methods"] = "POST"
 #     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
 #     return response
+
+
+@router.post("/signout" , description="signout")
+async def signout(jwt_payload: dict = Depends(get_jwt_payload)):
+    # delete jwt token
+    try:
+        jti = jwt_payload['jti']
+        expires_in = int(jwt_payload['exp'] - datetime.now(timezone.utc).timestamp())
+        if expires_in < 0:
+            expires_in = 0
+            return {"message": "signout success"}
+        await put_invalid_jti(jti, expires_in)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="invalid token")
+    return {"message": "signout success"}
+
+
+@router.get("/validate" , description="validate token")
+async def validate(jwt_payload: dict = Depends(get_jwt_payload)):
+    try:
+        jti = jwt_payload['jti']
+        if await get_invalid_jti(jti):
+            return {"valid": False}
+        return {"valid": True}
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="invalid token")

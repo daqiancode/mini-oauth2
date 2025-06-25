@@ -2,6 +2,7 @@ from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
 import jwt
 import datetime
+from app.utils.rands import rand_str
 
 def generate_eddsa_keypair():
     private_key = ed25519.Ed25519PrivateKey.generate()
@@ -31,7 +32,8 @@ def verify_jwt_eddsa(token: str, public_key_pem: str) -> dict:
 def create_access_token(private_key: str , user_id: str , roles: str ,duration_minutes: int,**kwargs):
     payload = {
         "sub": str(user_id),
-        "exp": datetime.datetime.now() + datetime.timedelta(minutes=duration_minutes)
+        "exp": datetime.datetime.now() + datetime.timedelta(minutes=duration_minutes),
+        "jti": rand_str(20)
     }
     if roles:
         payload['roles'] = roles

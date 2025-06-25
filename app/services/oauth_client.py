@@ -105,20 +105,23 @@ class WechatOAuthClient(OAuthClient):
     '''
     https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
     '''
-    def __init__(self, client_id: str, client_secret: str, authorize_url: str="https://open.weixin.qq.com/connect/oauth2/authorize", access_token_url: str="https://api.weixin.qq.com/sns/oauth2/access_token", userinfo_endpoint: str="https://api.weixin.qq.com/sns/userinfo", scope:str="snsapi_userinfo" , lang:str="zh_CN"):
+    def __init__(self, client_id: str, client_secret: str, authorize_url: str="https://open.weixin.qq.com/connect/qrconnect", access_token_url: str="https://api.weixin.qq.com/sns/oauth2/access_token", userinfo_endpoint: str="https://api.weixin.qq.com/sns/userinfo", scope:str="snsapi_userinfo" , lang:str="zh_CN"):
         super().__init__(client_id, client_secret, authorize_url, access_token_url, userinfo_endpoint, scope)
         self.lang = lang
 
     def get_authorize_url(self ,redirect_uri:str, state:str , **kwargs):
         '''
+        https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
+        https://open.weixin.qq.com/connect/qrconnect?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect
         https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx807d86fb6b3d4fd2&redirect_uri=http%3A%2F%2Fdevelopers.weixin.qq.com&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect
         '''
         params = {
             "appid": self.client_id,
             "redirect_uri": redirect_uri,
             "response_type": "code",
-            "scope": "snsapi_userinfo",
+            "scope": "snsapi_login",
             "state": state,
+            'lang': self.lang
         }
         params.update(kwargs)
         return set_url_params(self.authorize_url, params)+"#wechat_redirect"

@@ -8,26 +8,15 @@ from jwt.exceptions import InvalidTokenError
 from app.utils.jwts import verify_jwt_eddsa
 import logging
 from pydantic import BaseModel
+from app.routers.dependencies import get_user_id
 log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["User Info"])
 
-bearer = OAuth2AuthorizationCodeBearer(authorizationUrl=f"{settings.EXTERNAL_DOMAIN}/signin", tokenUrl=f"{settings.EXTERNAL_DOMAIN}/token")
+oauth2_bearer = OAuth2AuthorizationCodeBearer(authorizationUrl=f"{settings.EXTERNAL_DOMAIN}/signin", tokenUrl=f"{settings.EXTERNAL_DOMAIN}/token")
 
-async def get_user_id(token = Depends(bearer)):
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    try:
-        payload = verify_jwt_eddsa(token, settings.JWT_PUBLIC_KEY)
-        return int(payload['sub'])
-    except InvalidTokenError as e:
-        log.error(e)
-        raise credentials_exception
 
-@router.get("/userinfo", description="Get user info")
+@router.get("/userinfo", description="Get user info" , dependencies=[Depends(oauth2_bearer)])
 async def userinfo(user_id = Depends(get_user_id)):
     user = await Users().get(user_id)
     if user:
@@ -41,7 +30,7 @@ class UserPut(BaseModel):
 
 @router.put("/userinfo", description="Modify user info")
 async def modify_userinfo(user_id = Depends(get_user_id), user: UserPut = Depends(UserPut)):
-    await Users().update(user_id, user.name, user.email, user.roles)
+    await Users().update(user_id, name=user.name, avatar = user.avatar)
     return {"result": "OK"}
 
 class UserPasswordPut(BaseModel):
