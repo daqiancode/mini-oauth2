@@ -9,6 +9,8 @@ import os
 from app.services.oauth_client import GoogleOAuthClient, GithubOAuthClient, AppleOAuthClient, WechatOAuthClient, LinkedinOAuthClient
 from app.models.models import UserSource
 import logging
+from app.config import settings
+from app.utils.jwts import create_access_token
 log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Social Signin"])
@@ -39,6 +41,19 @@ if env.GOOGLE_CLIENT_ID and env.GOOGLE_CLIENT_SECRET:
         user_id = await Users().save_or_update(user['name'], user['picture'], email=user['email'], source=UserSource.google)
         code = await set_code(context, user_id)
         return RedirectResponse(set_url_params(context['redirect_uri'], {"code": code, 'state': context['state']}))
+    
+    @router.get("/exchange/google")
+    async def exchange_google(request: Request):
+        # exchange google token to jwt token
+        log.info("exchange google: %s", request.query_params)
+        access_token = request.query_params.get('access_token')
+        google_oauth = GoogleOAuthClient(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET)
+        user = await google_oauth.get_userinfo(access_token)
+        user_id = await Users().save_or_update(user['name'], user['picture'], email=user['email'], source=UserSource.google)
+        access_token = create_access_token(settings.JWT_PRIVATE_KEY, user_id, user.roles ,settings.JWT_EXPIRES_IN_HOURS * 60)
+        # issue jwt token
+        return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN_HOURS * 60}
+        
 
 # Similar changes for other social login providers (Github, Apple, Wechat)
 # Each endpoint needs to be made async and await the async operations

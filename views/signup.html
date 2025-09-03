@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signup Page</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #ede9fe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 900px;
+      width: 100%;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .signup,
+    .oauth-info {
+      padding: 40px;
+    }
+
+    .signup h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #444;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    .inline-btn {
+      margin-top: 6px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      background: #f3f4f6;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #333;
+    }
+
+    .inline-btn:hover {
+      background: #e5e7eb;
+    }
+
+    .captcha-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .captcha-img {
+      height: 50px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .oauth-info {
+      background: #f9fafb;
+      border-left: 1px solid #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .oauth-logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .oauth-info h2 {
+      font-size: 1.6rem;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .oauth-info p {
+      font-size: 1rem;
+      color: #555;
+      max-width: 280px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Signup Section -->
+    <div class="signup">
+      <h1>Create Account</h1>
+      <form action="/signup?{{ query|safe }}" method="POST">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input type="text" id="name" placeholder="Enter your full name" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="Enter your email" />
+        </div>
+
+        <div class="form-group">
+          <label for="captcha">Verification Code (CAPTCHA)</label>
+          <div class="captcha-box">
+            <input type="text" id="captcha" placeholder="Enter the code" />
+            <!-- Captcha from URL -->
+            <img src="/signup/verify_code/captcha" alt="CAPTCHA" class="captcha-img"
+              onclick="this.src='/signup/verify_code/captcha?'+Date.now()" title="Click to refresh" />
+          </div>
+          <button type="button" class="inline-btn" id="send-verification-code">Send Verification Code</button>
+        </div>
+        <div class="form-group">
+          <label for="email-code">Email Verification Code</label>
+          <input type="text" id="email-code" placeholder="Enter the code sent to your email" />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" placeholder="Enter your password" />
+        </div>
+
+        <button type="submit">Sign Up</button>
+      </form>
+    </div>
+
+    <!-- OAuth2 Client Branding Section -->
+    <div class="oauth-info">
+      <img src="{{ client.logo }}" alt="Client Logo" class="oauth-logo" />
+      <h2>{{ client.name }}</h2>
+      <p>{{ client.description }}</p>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script>
+
+    $(document).ready(function () {
+      $("#send-verification-code").click(function () {
+        var email = $("#email").val();
+        if (!email) {
+          $("#status").text("Please enter your email first.").removeClass().addClass("status-msg status-error");
+          return;
+        }
+
+        $("#status").text("Sending...").removeClass().addClass("status-msg");
+
+        // Example AJAX request to your backend
+        $.ajax({
+          url: "/signup/verify_code",   // <-- Replace with your API endpoint
+          method: "POST",
+          contentType: "application/json",
+          data: JSON.stringify({ email: email, captcha: $("#captcha").val() }),
+          success: function (res) {
+            $("#status").text("Verification code sent!").removeClass().addClass("status-msg status-success");
+          },
+          error: function (err) {
+            $("#status").text("Failed to send code. Try again.").removeClass().addClass("status-msg status-error");
+          }
+        });
+      });
+    });
+
+  </script>
+</body>
+
+</html>

@@ -10,20 +10,20 @@ from app.config import settings
 from app.routers.forms import SigninRequest, redis_prefix, ResponseType, GrantType, set_code,get_code,delete_code,put_invalid_jti,get_invalid_jti
 from app.services.clients import Clients
 from app.utils.urls import encode_url_params, check_url_in_domains
-from app.routers.dependencies import jwt_bearer, get_jwt_payload
+from app.routers.dependencies import jwt_bearer, get_jwt_payload, templates
 from datetime import datetime, timezone
+from app.services.client_users import ClientUsers
 import logging
 log = logging.getLogger(__name__)
-router = APIRouter(tags=["Auth"])
+router = APIRouter(tags=["OAuth2"])
 
 
-templates = Jinja2Templates(directory="views")
 
 
 @router.get("/signin" , description="Signin page")
 async def signin(request: Request, query: Annotated[SigninRequest, Query()]):
     #check client_id , response_type , redirect_uri , scope
-    client = await Clients().get_client_by_id(query.client_id)
+    client = await Clients().get(query.client_id)
     if not client:
         raise HTTPException(status_code=400, detail="client not found")
     if client.disabled:
@@ -44,13 +44,14 @@ class SigninPostRequest(BaseModel):
 @router.post("/signin" , description="Signin page")
 async def signin_post(form: Annotated[SigninPostRequest, Form()], query: Annotated[SigninRequest, Query()], request: Request):
     # check username, password, MFA
+    client = await Clients().get(query.client_id)
     try:
-        user_id = await Users().signin(form.email, form.password)
+        user_id = await Users().signin(form.email, form.password, query.client_id)
     except Exception as e:
-        return templates.TemplateResponse("signin.html", {'request': request,'query': encode_url_params(query.model_dump()) , 'error': str(e)})
+        return templates.TemplateResponse("signin.html", {'request': request,'query': encode_url_params(query.model_dump()) , 'error': str(e) , 'client': client})
     user = await Users().get(user_id)
     if user.disabled:
-        return templates.TemplateResponse("signin.html", {'request': request,'query': encode_url_params(query.model_dump()) , 'error': 'User disabled'})
+        return templates.TemplateResponse("signin.html", {'request': request,'query': encode_url_params(query.model_dump()) , 'error': 'User disabled' , 'client': client})
     code = await set_code(query.model_dump(), user_id)
     # expire 10 minutes
 
@@ -76,12 +77,15 @@ async def token(form: Annotated[TokenRequest, Form()]):
     # check redirect_uri is match
     if code_value['context']['redirect_uri'] != form.redirect_uri:
         raise HTTPException(status_code=400, detail="redirect_uri not match")
-    user = await Users().get(code_value['user_id'])
+    # user = await Users().get(code_value['user_id'])
+    client = await Clients().get(form.client_id)
+    user_id = code_value['user_id']
+    user = await ClientUsers().get_user_info(user_id, form.client_id)
     if not user:
         raise HTTPException(status_code=400, detail="user not found")
     if user.disabled:
         raise HTTPException(status_code=400, detail="user disabled")
-    access_token = create_access_token(settings.JWT_PRIVATE_KEY, user.id, user.roles ,settings.JWT_EXPIRES_IN_HOURS * 60)
+    access_token = create_access_token(client.jwt_private_key, user_id, form.client_id, user.roles ,settings.JWT_EXPIRES_IN_HOURS)
     # issue jwt token
     return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN_HOURS * 60}
 

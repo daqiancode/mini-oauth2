@@ -4,14 +4,15 @@ from fastapi.exceptions import HTTPException
 import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.models.models import ClientUser
 
 # user fields except password
-query_keys = [User.id, User.name, User.email, User.openid, User.roles, User.avatar, User.source, User.disabled, User.created_at, User.updated_at]
+query_keys = [User.id, User.name, User.email, User.openid, User.avatar, User.source, User.disabled, User.created_at, User.updated_at]
 
 
 class Users:
-    async def signin(self, email: str, password: str):
-        async with db_readonly() as session:
+    async def signin(self, email: str, password: str, client_id: str):
+        async with db_transaction() as session:
             result = await session.execute(select(User).filter(User.email == email))
             user = result.scalar_one_or_none()
             if not user:
@@ -20,21 +21,31 @@ class Users:
                 raise Exception("User disabled")
             if not self.verify_password(password, user.password):
                 raise Exception("Invalid credentials")
+            # build client user connection if not exists
+            client_user = await session.execute(select(ClientUser).filter(ClientUser.user_id == user.id, ClientUser.client_id == client_id))
+            if not client_user:
+                client_user = ClientUser(user_id=user.id, client_id=client_id)
+                session.add(client_user)
             return user.id
             
-    async def signup(self, name: str, email: str, password: str):
-        return await self.create(name, email, password)
+    async def signup(self, name: str, email: str, password: str, client_id: str):
+        return await self.create(name, email, password, client_id)
 
-    async def create(self, name: str, email: str, password: str, roles: str = None):
+    async def create(self, name: str, email: str, password: str, client_id: str):
         async with db_transaction() as session:
             # check email 
             result = await session.execute(select(User).filter(User.email == email))
             if result.scalar_one_or_none() is not None:
                 raise HTTPException(status_code=400, detail="User already exists")
-            user = User(name=name, email=email, password=self.hash_password(password), source=UserSource.local, roles=roles)
+            user = User(name=name, email=email, password=self.hash_password(password), source=UserSource.local)
             session.add(user)
             await session.flush()
             user_id = user.id
+            # build client user connection if not exists
+            client_user = await session.execute(select(ClientUser).filter(ClientUser.user_id == user_id, ClientUser.client_id == client_id))
+            if not client_user:
+                client_user = ClientUser(user_id=user_id, client_id=client_id)
+                session.add(client_user)
         return await self.get(user_id)
 
     async def get_user_by_email(self, email: str):
@@ -91,7 +102,7 @@ class Users:
                 raise HTTPException(status_code=404, detail="User not found")
             await session.delete(user)
 
-    async def update(self, id: str, name: str=None, email: str=None, roles: str=None , disabled: bool=None, avatar: str=None):
+    async def update(self, id: str, name: str=None, email: str=None, disabled: bool=None, avatar: str=None):
         async with db_transaction() as session:
             result = await session.execute(select(User).filter(User.id == id))
             user = result.scalar_one_or_none()
@@ -101,8 +112,6 @@ class Users:
                 user.name = name
             if email:
                 user.email = email
-            if roles:
-                user.roles = roles
             if disabled:
                 user.disabled = disabled
             if avatar:
@@ -134,7 +143,7 @@ class Users:
             r = result.one_or_none()
             return User(**r._asdict()) if r else None
 
-    async def save_or_update(self, name: str, avatar: str, email: str = None, openid: str = None, source: str = None):
+    async def save_or_update(self, name: str, avatar: str, email: str = None, mobile: str = None, openid: str = None, source: str = None):
         async with db_transaction() as session:
             query = select(User)
             if email:
@@ -148,7 +157,7 @@ class Users:
             user = result.scalar_one_or_none()
             
             if not user:
-                user = User(name=name, email=email, openid=openid, avatar=avatar, source=source)
+                user = User(name=name, email=email,mobile=mobile, openid=openid, avatar=avatar, source=source)
                 session.add(user)
             else:
                 user.name = name

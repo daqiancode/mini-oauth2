@@ -1,12 +1,23 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from contextlib import asynccontextmanager
-from app.config import settings
+from app.config import env
 from typing import AsyncGenerator
 
-engine = create_async_engine(settings.DB_URL, pool_pre_ping=True)
+
+async_engine = create_async_engine(env.DB_URL, future=True,
+                                    pool_size = env.DB_POOL_SIZE ,
+                                    max_overflow = env.DB_MAX_OVERFLOW,
+                                    pool_timeout = 30,
+                                    pool_recycle = 1800,
+                                    pool_pre_ping = True,
+                                    echo=env.DB_ECHO
+                                    )
+
 AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
+    async_engine,
+    expire_on_commit=False,
+    class_=AsyncSession,
 )
 
 async def get_db():
@@ -14,9 +25,13 @@ async def get_db():
         yield session
 
 @asynccontextmanager
-async def db_context():
+async def async_session(expunge_all=True,flush=True)-> AsyncGenerator[AsyncSession, None]:
     async with AsyncSessionLocal() as session:
         yield session
+        if flush:
+            await session.flush()
+        if expunge_all:
+            session.expunge_all()
 
 @asynccontextmanager
 async def db_transaction(expunge_all=True,flush=True)->AsyncGenerator[AsyncSession, None]:
@@ -30,7 +45,7 @@ async def db_transaction(expunge_all=True,flush=True)->AsyncGenerator[AsyncSessi
             await session.commit()
         except Exception as e:
             await session.rollback()
-            raise e
+            raise
 
 
 @asynccontextmanager
@@ -42,7 +57,7 @@ async def db_readonly()->AsyncGenerator[AsyncSession, None]:
 async def create_db_if_not_exists():
     from urllib.parse import urlparse
     from sqlalchemy import text
-    url = urlparse(settings.DB_URL)
+    url = urlparse(env.DB_URL)
     db = url.path.lstrip('/')
     # no transaction
     engine = create_async_engine(url._replace(path='').geturl() , echo=True, future=True)

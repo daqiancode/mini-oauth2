@@ -7,7 +7,12 @@ def is_url(url:str):
     except:
         return False
 
-def check_url_in_domains(url:str, domains:list[str]):
+def check_url_in_domains(url:str, domains:str):
+    if not domains:
+        return False
+    domains = [f.strip() for f in domains.split(',')]
+    if url in domains:
+        return True
     parsed_url = urlparse(url)
     return parsed_url.netloc in domains
 

@@ -8,6 +8,13 @@ from app.routers.forms import signup_prefix
 from app.services.users import Users
 from app.drivers.emails import send_email
 import logging
+from typing import Annotated
+from fastapi import Request, Query
+from fastapi.templating import Jinja2Templates
+from app.utils.urls import encode_url_params
+from app.services.clients import Clients
+from app.routers.dependencies import templates
+
 log = logging.getLogger(__name__)
 router = APIRouter(tags=["Signup"])
 
@@ -60,3 +67,16 @@ async def signup(form: SignupRequest):
     return await Users().signup(form.email, form.password, form.name)
     # return access_token
 
+
+
+class SignupPageRequest(BaseModel):
+    client_id: str
+
+@router.get("/signup", description="signup page")
+async def signup_page(request: Request,qs: Annotated[SignupPageRequest, Query()]):
+    client = await Clients().get(qs.client_id)
+    if not client:
+        raise HTTPException(status_code=400, detail="client not found")
+    if client.disabled:
+        raise HTTPException(status_code=400, detail="client disabled")
+    return templates.TemplateResponse("signup.html", {'request': request,'query': encode_url_params(qs.model_dump()), 'client': client})

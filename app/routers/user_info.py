@@ -5,10 +5,11 @@ from typing import Annotated
 from fastapi import Depends, HTTPException
 from app.services.users import Users
 from jwt.exceptions import InvalidTokenError
-from app.utils.jwts import verify_jwt_eddsa
+from app.utils.jwts import verify_jwt
 import logging
 from pydantic import BaseModel
-from app.routers.dependencies import get_user_id
+from app.routers.dependencies import get_user_id, get_client_id
+from app.services.client_users import ClientUsers
 log = logging.getLogger(__name__)
 
 router = APIRouter(tags=["User Info"])
@@ -17,8 +18,8 @@ oauth2_bearer = OAuth2AuthorizationCodeBearer(authorizationUrl=f"{settings.EXTER
 
 
 @router.get("/userinfo", description="Get user info" , dependencies=[Depends(oauth2_bearer)])
-async def userinfo(user_id = Depends(get_user_id)):
-    user = await Users().get(user_id)
+async def userinfo(user_id = Depends(get_user_id) , client_id = Depends(get_client_id)):
+    user = await ClientUsers().get_user_info(user_id, client_id)
     if user:
         return user
     else:

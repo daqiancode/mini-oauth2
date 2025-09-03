@@ -1,238 +1,235 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign In - {{ client.name }}</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f5f5f5;
-        }
-        .signin-container {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 480px;
-        }
-        .signin-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-        .signin-header h1 {
-            margin: 0;
-            color: #333;
-            font-size: 1.8rem;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #555;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-            box-sizing: border-box;
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: #4a90e2;
-            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-        }
-        .signin-button {
-            width: 100%;
-            padding: 0.75rem;
-            background-color: #4a90e2;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .signin-button:hover {
-            background-color: #357abd;
-        }
-        .signup-link {
-            text-align: center;
-            margin-top: 1rem;
-        }
-        .signup-link a {
-            color: #4a90e2;
-            text-decoration: none;
-        }
-        .signup-link a:hover {
-            text-decoration: underline;
-        }
-        .error-message {
-            color: #dc3545;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-        .social-signin {
-            margin-top: 1.5rem;
-            text-align: center;
-        }
-        .social-signin p {
-            color: #666;
-            margin-bottom: 1rem;
-            position: relative;
-        }
-        .social-signin p::before,
-        .social-signin p::after {
-            content: "";
-            position: absolute;
-            top: 50%;
-            width: 30%;
-            height: 1px;
-            background-color: #ddd;
-        }
-        .social-signin p::before {
-            left: 0;
-        }
-        .social-signin p::after {
-            right: 0;
-        }
-        .social-buttons {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .social-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.75rem 1.25rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            background-color: white;
-            color: #333;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            text-decoration: none;
-            min-width: 100px;
-        }
-        .social-button:hover {
-            background-color: #f5f5f5;
-        }
-        .social-button img {
-            width: 20px;
-            height: 20px;
-            margin-right: 0.5rem;
-        }
-        .client-info {
-            display: flex;
-            align-items: flex-start;
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-            text-align: left;
-        }
-        .client-logo {
-            width: 80px;
-            height: 80px;
-            border-radius: 8px;
-            flex-shrink: 0;
-        }
-        .client-details {
-            flex: 1;
-        }
-        .client-name {
-            font-size: 1.5rem;
-            color: #333;
-            margin-bottom: 0;
-            margin-top: 0;
-        }
-        .client-description {
-            color: #666;
-            margin-bottom: 0.3rem;
-            margin-top: 0.3rem;
-            font-size: 0.9rem;
-        }
-        .client-url {
-            color: #4a90e2;
-            text-decoration: none;
-            font-size: 0.9rem;
-        }
-        .client-url:hover {
-            text-decoration: underline;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In - {{ client.name }}</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #e0f2fe, #ede9fe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      max-width: 900px;
+      width: 100%;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .signin, .oauth-info {
+      padding: 40px;
+    }
+    .signin h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+      color: #333;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #444;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+      transition: border 0.2s;
+    }
+    input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: white;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    .error-message {
+      color: #dc3545;
+      margin-bottom: 1rem;
+      text-align: center;
+      font-weight: 500;
+    }
+    .social-signin {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .social-signin p {
+      color: #666;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .social-signin p::before,
+    .social-signin p::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 30%;
+      height: 1px;
+      background-color: #ddd;
+    }
+    .social-signin p::before { left: 0; }
+    .social-signin p::after { right: 0; }
+    .social-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .social-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.25rem;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background-color: white;
+      color: #333;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      text-decoration: none;
+      min-width: 100px;
+    }
+    .social-button:hover {
+      background-color: #f5f5f5;
+    }
+    .social-button img {
+      width: 20px;
+      height: 20px;
+      margin-right: 0.5rem;
+    }
+    .signup-link {
+      text-align: center;
+      margin-top: 1.5rem;
+    }
+    .signup-link a {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .signup-link a:hover {
+      text-decoration: underline;
+    }
+    .oauth-info {
+      background: #f9fafb;
+      border-left: 1px solid #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .oauth-logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+    .oauth-info h2 {
+      font-size: 1.6rem;
+      margin-bottom: 12px;
+      color: #333;
+    }
+    .oauth-info p {
+      font-size: 1rem;
+      color: #555;
+      max-width: 280px;
+    }
+    .oauth-info a {
+      color: #6366f1;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+    .oauth-info a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-    <div class="signin-container">
-        <div class="client-info">
-            {% if client.logo %}
-            <img src="{{ client.logo }}" alt="{{ client.name }}" class="client-logo">
-            {% endif %}
-            <div class="client-details">
-                <h1 class="client-name">{{ client.name }}</h1>
-                {% if client.description %}
-                <p class="client-description">{{ client.description }}</p>
-                {% endif %}
-                {% if client.client_url %}
-                <a href="{{ client.client_url }}" class="client-url" target="_blank">{{ client.client_url }}</a>
-                {% endif %}
-            </div>
+  <div class="container">
+    <!-- Sign In Section -->
+    <div class="signin">
+      <h1>Sign In</h1>
+      {% if error %}
+      <div class="error-message">
+        {{ error }}
+      </div>
+      {% endif %}
+      <form action="/signin?{{ query|safe }}" method="POST">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required />
         </div>
-        <div class="signin-header">
-            <h1>Sign In</h1>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required />
         </div>
-        {% if error %}
-        <div class="error-message">
-            {{ error }}
+        <button type="submit">Sign In</button>
+      </form>
+
+      <div class="social-signin">
+        <p>Or continue with</p>
+        <div class="social-buttons">
+          <a href="/signin/google?{{ query|safe }}" class="social-button">
+            <img src="https://www.google.com/favicon.ico" alt="Google"> Google
+          </a>
+          <a href="/signin/github?{{ query|safe }}" class="social-button">
+            <img src="https://github.com/favicon.ico" alt="GitHub"> GitHub
+          </a>
+          <a href="/signin/apple?{{ query|safe }}" class="social-button">
+            <img src="https://apple.com/favicon.ico" alt="Apple"> Apple
+          </a>
+          <a href="/signin/wechat?{{ query|safe }}" class="social-button">
+            <img src="https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico" alt="WeChat"> WeChat
+          </a>
         </div>
-        {% endif %}
-        <form action="/signin?{{ query|safe }}" method="POST">
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" required>
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <button type="submit" class="signin-button">Sign In</button>
-        </form>
-        <div class="social-signin">
-            <p>Or continue with</p>
-            <div class="social-buttons">
-                <a href="/signin/google?{{ query|safe }}" class="social-button">
-                    <img src="https://www.google.com/favicon.ico" alt="Google">
-                    Google
-                </a>
-                <a href="/signin/github?{{ query|safe }}" class="social-button">
-                    <img src="https://github.com/favicon.ico" alt="GitHub">
-                    GitHub
-                </a>
-                <a href="/signin/apple?{{ query|safe }}" class="social-button">
-                    <img src="https://apple.com/favicon.ico" alt="Apple">
-                    Apple
-                </a>
-                <a href="/signin/wechat?{{ query|safe }}" class="social-button">
-                    <img src="https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico" alt="WeChat">
-                    WeChat
-                </a>
-            </div>
-        </div>
-        <div class="signup-link">
-            <p>Don't have an account? <a href="/signup">Sign up</a></p>
-        </div>
+      </div>
+
+      <div class="signup-link">
+        <p>Don't have an account? <a href="/signup">Sign up</a></p>
+      </div>
     </div>
+
+    <!-- OAuth2 Client Branding Section -->
+    <div class="oauth-info">
+      {% if client.logo %}
+      <img src="{{ client.logo }}" alt="{{ client.name }}" class="oauth-logo">
+      {% endif %}
+      <h2>{{ client.name }}</h2>
+      {% if client.description %}
+      <p>{{ client.description }}</p>
+      {% endif %}
+      {% if client.client_url %}
+      <a href="{{ client.client_url }}" target="_blank">{{ client.client_url }}</a>
+      {% endif %}
+    </div>
+  </div>
 </body>
 </html>

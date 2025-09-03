@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     REDIS_URL: str
     # Database
     DB_URL: str 
+    DB_POOL_SIZE: int = 200
+    DB_MAX_OVERFLOW: int = 100
+    DB_ECHO: bool = False
     
     IS_REDIS_CLUSTER: bool = False
 
