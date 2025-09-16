@@ -118,6 +118,7 @@ async def signout(jwt_payload: dict = Depends(get_jwt_payload)):
 async def validate(jwt_payload: dict = Depends(get_jwt_payload)):
     try:
         jti = jwt_payload['jti']
+        client_id = jwt_payload['aud']
         if await get_invalid_jti(jti):
             return {"valid": False}
         return {"valid": True}

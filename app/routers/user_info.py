@@ -4,8 +4,6 @@ from app.config import settings
 from typing import Annotated
 from fastapi import Depends, HTTPException
 from app.services.users import Users
-from jwt.exceptions import InvalidTokenError
-from app.utils.jwts import verify_jwt
 import logging
 from pydantic import BaseModel
 from app.routers.dependencies import get_user_id, get_client_id

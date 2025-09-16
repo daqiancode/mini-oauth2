@@ -10,10 +10,13 @@ from sqlalchemy.orm import Session
 from app.services.clients import Clients
 router = APIRouter(tags=["Clients"])
 
+class ClientGet(BaseModel):
+    name: str|None = None
+
 @router.get("/clients" , description="Get clients")
-async def get_clients(request: Request, db: Session = Depends(get_db)):
+async def get_clients(request: Request, qs: Annotated[ClientGet, Query()]):
     #order by created_at desc
-    return await Clients().query()
+    return await Clients().query(qs.name)
 
 class ClientPost(BaseModel):
     name: str
