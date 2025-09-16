@@ -20,14 +20,16 @@ async def get_clients(request: Request, qs: Annotated[ClientGet, Query()]):
 
 class ClientPost(BaseModel):
     name: str
-    allowed_domains: list[str]
+    allowed_uris: list[str]
     logo: str|None
     client_url: str|None
     description: str|None
+    jwt_algorithm: str = "EdDSA"
+    owner_user_id: str
 
 @router.post("/clients" , description="Create client")
 async def create_client(form:ClientPost):
-    return await Clients().create(form.name, form.allowed_domains, form.logo, form.client_url, form.description)
+    return await Clients().create(form.name, form.owner_user_id, form.allowed_uris, form.logo, form.client_url, form.description, jwt_algorithm = form.jwt_algorithm)
 
 @router.get("/clients/{id}" , description="Get client")
 async def get_client(id:str):

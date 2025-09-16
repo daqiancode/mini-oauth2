@@ -5,6 +5,8 @@ from app.config import settings
 from jwt.exceptions import InvalidTokenError
 import logging
 from fastapi.templating import Jinja2Templates
+from app.models.models import Client
+from app.services.clients import Clients
 
 
 log = logging.getLogger(__name__)
@@ -39,3 +41,14 @@ def get_client_id(credentials: HTTPAuthorizationCredentials = Depends(jwt_bearer
         return jwt_payload['aud']
     else:
         raise HTTPException(status_code=401, detail="invalid token")
+
+
+async def check_client(client_id: str , redirect_uri: str=None)->Client:
+    client = await Clients().get(client_id)
+    if not client:
+        raise HTTPException(status_code=400, detail="client not found")
+    if client.disabled:
+        raise HTTPException(status_code=400, detail="client disabled")
+    if redirect_uri and not client.allowed_uris or redirect_uri not in client.allowed_uris:
+        raise HTTPException(status_code=400, detail="redirect_uri not allowed")
+    return client

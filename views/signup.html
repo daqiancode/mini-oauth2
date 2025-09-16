@@ -149,18 +149,18 @@
       <form action="/signup?{{ query|safe }}" method="POST">
         <div class="form-group">
           <label for="name">Full Name</label>
-          <input type="text" id="name" placeholder="Enter your full name" />
+          <input name="name" type="text" id="name" placeholder="Enter your full name" />
         </div>
 
         <div class="form-group">
           <label for="email">Email Address</label>
-          <input type="email" id="email" placeholder="Enter your email" />
+          <input name="email" type="email" id="email" placeholder="Enter your email" />
         </div>
 
         <div class="form-group">
           <label for="captcha">Verification Code (CAPTCHA)</label>
           <div class="captcha-box">
-            <input type="text" id="captcha" placeholder="Enter the code" />
+            <input name="captcha" type="text" id="captcha" placeholder="Enter the code" />
             <!-- Captcha from URL -->
             <img src="/signup/verify_code/captcha" alt="CAPTCHA" class="captcha-img"
               onclick="this.src='/signup/verify_code/captcha?'+Date.now()" title="Click to refresh" />
@@ -169,12 +169,12 @@
         </div>
         <div class="form-group">
           <label for="email-code">Email Verification Code</label>
-          <input type="text" id="email-code" placeholder="Enter the code sent to your email" />
+          <input name="verify_code" type="text" id="email-code" placeholder="Enter the code sent to your email" />
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" placeholder="Enter your password" />
+          <input name="password" type="password" id="password" placeholder="Enter your password" />
         </div>
 
         <button type="submit">Sign Up</button>

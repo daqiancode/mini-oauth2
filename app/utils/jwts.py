@@ -24,3 +24,55 @@ def create_access_token(private_key: str , user_id: str , client_id: str , roles
         payload.update(kwargs)
     return sign_jwt(payload,private_key, algorithm=algorithm)
 
+from typing import Tuple
+
+supported_algorithms = [
+    "HS256",
+    "HS384",
+    "HS512",
+    "RS256",
+    "RS384",
+    "RS512",
+    "ES256",
+    "ES384",
+    "ES512",
+    "EdDSA"
+]
+
+from app.utils.signs import hs_keypair, rs_keypair, es_keypair, eddsa_keypair
+
+
+def is_supported_algorithm(algorithm:str) -> bool:
+    return algorithm in supported_algorithms
+
+def create_key_pair(algorithm:str) -> Tuple[str, str]:
+    """
+    create key pair for jwt
+    @return: tuple of private key and public key
+    """
+    if not is_supported_algorithm(algorithm):
+        raise ValueError(f"Invalid algorithm: {algorithm}")
+    if algorithm == "HS256":
+        return hs_keypair(32)
+    elif algorithm == "HS384":
+        return hs_keypair(48)
+    elif algorithm == "HS512":
+        return hs_keypair(64)
+    elif algorithm == "RS256":
+        return rs_keypair(2048)
+    elif algorithm == "RS384":
+        return rs_keypair(3072)
+    elif algorithm == "RS512":
+        return rs_keypair(4096)
+    elif algorithm == "ES256":
+        return es_keypair(256)
+    elif algorithm == "ES384":
+        return es_keypair(384)
+    elif algorithm == "ES512":
+        return es_keypair(521)
+    elif algorithm == "EdDSA":
+        return eddsa_keypair()
+    else:
+        raise ValueError(f"Invalid algorithm: {algorithm}")
+
+

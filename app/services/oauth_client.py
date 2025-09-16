@@ -2,7 +2,22 @@ import httpx
 from app.utils.urls import set_url_params
 from fastapi import HTTPException
 import logging
+from typing import TypedDict
 logger = logging.getLogger(__name__)
+
+class UserInfo(TypedDict):
+    name: str
+    email: str
+    picture: str
+    source: str
+    openid: str|None
+
+class AccessTokenResponse(TypedDict):
+    access_token: str
+    expires_in: int
+    refresh_token: str|None
+    scope: str
+    token_type: str
 
 class OAuthClient:
     def __init__(self, client_id: str, client_secret: str, authorize_url: str, access_token_url: str, userinfo_endpoint: str, scope:str=None):
@@ -15,7 +30,7 @@ class OAuthClient:
         self.authorization_extra_params = {}
 
 
-    def get_authorize_url(self ,redirect_uri:str, state:str , **kwargs):
+    def get_authorize_url(self ,redirect_uri:str, state:str , **kwargs)->str:
         # escape redirect_uri
         params = {}
         params.update(self.authorization_extra_params)
@@ -29,7 +44,7 @@ class OAuthClient:
         params.update(kwargs)
         return set_url_params(self.authorize_url, params)
     
-    async def get_access_token(self, code:str, redirect_uri:str):
+    async def get_access_token(self, code:str, redirect_uri:str)->AccessTokenResponse:
         data = {
             'grant_type': 'authorization_code',
             "code": code,
@@ -41,7 +56,7 @@ class OAuthClient:
             resp = await client.post(self.access_token_url, data=data)
             return resp.json()
         
-    async def get_userinfo(self, access_token:str=None):
+    async def get_userinfo(self, access_token:str=None)->UserInfo:
         async with httpx.AsyncClient() as client:
             resp = await client.get(self.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
             return resp.json()
@@ -58,7 +73,7 @@ class GoogleOAuthClient(OAuthClient):
             "prompt": "consent"
         }
 
-    async def get_userinfo(self, access_token:str=None):
+    async def get_userinfo(self, access_token:str=None)->UserInfo:
         async with httpx.AsyncClient() as client:
             resp = await client.get(self.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
             return resp.json()
@@ -69,7 +84,7 @@ class GithubOAuthClient(OAuthClient):
     def __init__(self, client_id: str, client_secret: str, authorize_url: str="https://github.com/login/oauth/authorize", access_token_url: str="https://github.com/login/oauth/access_token", userinfo_endpoint: str="https://api.github.com/user", scope:str="user:email"):
         super().__init__(client_id, client_secret, authorize_url, access_token_url, userinfo_endpoint, scope)
 
-    async def get_userinfo(self, access_token:str=None):
+    async def get_userinfo(self, access_token:str=None)->UserInfo:
         async with httpx.AsyncClient() as client:
             resp = await client.get(self.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
             result = resp.json()
@@ -94,7 +109,7 @@ class AppleOAuthClient(OAuthClient):
         }
 
 
-    async def get_userinfo(self, access_token:str=None):
+    async def get_userinfo(self, access_token:str=None)->UserInfo:
         async with httpx.AsyncClient() as client:
             resp = await client.get(self.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
             return resp.json()
@@ -109,7 +124,7 @@ class WechatOAuthClient(OAuthClient):
         super().__init__(client_id, client_secret, authorize_url, access_token_url, userinfo_endpoint, scope)
         self.lang = lang
 
-    def get_authorize_url(self ,redirect_uri:str, state:str , **kwargs):
+    def get_authorize_url(self ,redirect_uri:str, state:str , **kwargs)->str:
         '''
         https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
         https://open.weixin.qq.com/connect/qrconnect?appid=APPID&redirect_uri=REDIRECT_URI&response_type=code&scope=SCOPE&state=STATE#wechat_redirect
@@ -137,7 +152,7 @@ class WechatOAuthClient(OAuthClient):
             resp = await client.post(self.access_token_url, data=data)
             return resp.json()
 
-    async def get_userinfo(self, access_token:str=None ,openid:str=None):
+    async def get_userinfo(self, access_token:str=None ,openid:str=None)->UserInfo:
         '''
         https://developers.weixin.qq.com/doc/offiaccount/OA_Web_Apps/Wechat_webpage_authorization.html
         {   
@@ -162,7 +177,7 @@ class LinkedinOAuthClient(OAuthClient):
     def __init__(self, client_id: str, client_secret: str, authorize_url: str="https://www.linkedin.com/oauth/v2/authorization", access_token_url: str="https://www.linkedin.com/oauth/v2/accessToken", userinfo_endpoint: str="https://api.linkedin.com/v2/me", scope:str="r_liteprofile r_emailaddress"):
         super().__init__(client_id, client_secret, authorize_url, access_token_url, userinfo_endpoint, scope)
 
-    async def get_userinfo(self, access_token:str=None):
+    async def get_userinfo(self, access_token:str=None)->UserInfo:
         async with httpx.AsyncClient() as client:
             resp = await client.get(self.userinfo_endpoint, headers={"Authorization": f"Bearer {access_token}"})
             return resp.json()

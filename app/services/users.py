@@ -5,9 +5,10 @@ import bcrypt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.models import ClientUser
-
+import logging
+log = logging.getLogger(__name__)
 # user fields except password
-query_keys = [User.id, User.name, User.email, User.openid, User.avatar, User.source, User.disabled, User.created_at, User.updated_at]
+query_keys = [User.id, User.name, User.email, User.openid, User.avatar, User.provider, User.disabled, User.created_at, User.updated_at]
 
 
 class Users:
@@ -15,12 +16,13 @@ class Users:
         async with db_transaction() as session:
             result = await session.execute(select(User).filter(User.email == email))
             user = result.scalar_one_or_none()
+            print(user)
             if not user:
                 raise Exception("User not found")
             if user.disabled:
                 raise Exception("User disabled")
             if not self.verify_password(password, user.password):
-                raise Exception("Invalid credentials")
+                raise Exception("Invalid password")
             # build client user connection if not exists
             client_user = await session.execute(select(ClientUser).filter(ClientUser.user_id == user.id, ClientUser.client_id == client_id))
             if not client_user:
@@ -37,7 +39,7 @@ class Users:
             result = await session.execute(select(User).filter(User.email == email))
             if result.scalar_one_or_none() is not None:
                 raise HTTPException(status_code=400, detail="User already exists")
-            user = User(name=name, email=email, password=self.hash_password(password), source=UserSource.local)
+            user = User(name=name, email=email, password=self.hash_password(password), provider=UserSource.local)
             session.add(user)
             await session.flush()
             user_id = user.id
@@ -62,6 +64,8 @@ class Users:
             return result.scalar_one_or_none() is not None
 
     def verify_password(self, password: str, hashed_password: str):
+        if not hashed_password or not password:
+            return False
         return bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8'))
     
     def hash_password(self, password: str):
@@ -143,7 +147,7 @@ class Users:
             r = result.one_or_none()
             return User(**r._asdict()) if r else None
 
-    async def save_or_update(self, name: str, avatar: str, email: str = None, mobile: str = None, openid: str = None, source: str = None):
+    async def save_or_update(self, name: str, avatar: str, email: str = None, mobile: str = None, openid: str = None, provider: str = None):
         async with db_transaction() as session:
             query = select(User)
             if email:
@@ -157,12 +161,12 @@ class Users:
             user = result.scalar_one_or_none()
             
             if not user:
-                user = User(name=name, email=email,mobile=mobile, openid=openid, avatar=avatar, source=source)
+                user = User(name=name, email=email,mobile=mobile, openid=openid, avatar=avatar, provider=provider)
                 session.add(user)
             else:
                 user.name = name
                 user.avatar = avatar
-                user.source = source
+                user.provider = provider
             return user.id
         
     async def list(self, ids: list[int]):

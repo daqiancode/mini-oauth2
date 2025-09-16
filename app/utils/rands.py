@@ -2,7 +2,7 @@ import random,string
 
 
 
-def rand_str(n:int, enable_upper:bool=False)->str:
+def rand_str(n:int, enable_upper:bool=True)->str:
     if enable_upper:
         return ''.join(random.choices(string.ascii_lowercase + string.digits + string.ascii_uppercase, k=n))
     else:

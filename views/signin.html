@@ -197,23 +197,23 @@
       <div class="social-signin">
         <p>Or continue with</p>
         <div class="social-buttons">
-          <a href="/signin/google?{{ query|safe }}" class="social-button">
+          <a href="/signin?{{ query|safe }}&provider=google" class="social-button">
             <img src="https://www.google.com/favicon.ico" alt="Google"> Google
           </a>
-          <a href="/signin/github?{{ query|safe }}" class="social-button">
+          <a href="/signin?{{ query|safe }}&provider=github" class="social-button">
             <img src="https://github.com/favicon.ico" alt="GitHub"> GitHub
           </a>
-          <a href="/signin/apple?{{ query|safe }}" class="social-button">
+          <a href="/signin?{{ query|safe }}&provider=apple" class="social-button">
             <img src="https://apple.com/favicon.ico" alt="Apple"> Apple
           </a>
-          <a href="/signin/wechat?{{ query|safe }}" class="social-button">
+          <a href="/signin?{{ query|safe }}&provider=wechat" class="social-button">
             <img src="https://res.wx.qq.com/a/wx_fed/assets/res/NTI4MWU5.ico" alt="WeChat"> WeChat
           </a>
         </div>
       </div>
 
       <div class="signup-link">
-        <p>Don't have an account? <a href="/signup">Sign up</a></p>
+        <p>Don't have an account? <a href="/signup?{{ query|safe }}">Sign up</a></p>
       </div>
     </div>
 

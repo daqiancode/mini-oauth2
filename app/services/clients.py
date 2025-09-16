@@ -3,13 +3,13 @@ from app.models.models import Client
 from fastapi.exceptions import HTTPException
 from app.utils.rands import rand_str
 from sqlalchemy import select
-from app.utils.signs import eddsa_keypair_pem
 from pydantic import BaseModel
+from app.utils.jwts import create_key_pair
 
 
 class ClientUpdate(BaseModel):
     name: str|None
-    allowed_domains: str|None
+    allowed_uris: list[str]|None
     logo: str|None
     client_url: str|None
     description: str|None
@@ -17,12 +17,12 @@ class ClientUpdate(BaseModel):
 
 class Clients:
 
-    async def create(self, name:str, owner_user_id:str, allowed_domains:str=None, logo:str=None, client_url:str=None, description:str=None):
-        jwt_public_key, jwt_private_key = eddsa_keypair_pem()
+    async def create(self, name:str, owner_user_id:str, allowed_uris:list[str]=None, logo:str=None, client_url:str=None, description:str=None , jwt_expires_in_hours:int=24, jwt_algorithm:str="EdDSA"):
+        jwt_private_key, jwt_public_key = create_key_pair(jwt_algorithm)
         async with db_transaction() as session:
-            client = Client(name=name, client_secret=rand_str(32,True), allowed_domains=allowed_domains, 
+            client = Client(name=name, client_secret=rand_str(32), allowed_uris=allowed_uris, 
                             logo=logo, client_url=client_url, description=description, owner_user_id=owner_user_id,
-                            jwt_expires_in_hours=24, jwt_algorithm="EdDSA", jwt_public_key=jwt_public_key, jwt_private_key=jwt_private_key)
+                            jwt_expires_in_hours=jwt_expires_in_hours, jwt_algorithm=jwt_algorithm, jwt_public_key=jwt_public_key, jwt_private_key=jwt_private_key)
             
             session.add(client)
             return client 
@@ -47,6 +47,8 @@ class Clients:
                 client.allowed_domains = form.allowed_domains
             if form.logo:
                 client.logo = form.logo
+            if form.allowed_uris:
+                client.allowed_uris = form.allowed_uris
             if form.client_url:
                 client.client_url = form.client_url
             if form.description:
@@ -79,7 +81,7 @@ class Clients:
             client = result.scalar_one_or_none()
             if not client:
                 raise HTTPException(status_code=404, detail="Client not found")
-            client.jwt_public_key, client.jwt_private_key = eddsa_keypair_pem()
+            client.jwt_private_key, client.jwt_public_key = create_key_pair(client.jwt_algorithm)
             return client
         
     async def reset_secret(self, id:str):

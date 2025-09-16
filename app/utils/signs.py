@@ -1,20 +1,23 @@
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from cryptography.hazmat.primitives import serialization
-import jwt
-import datetime
-from app.utils.rands import rand_str
 from typing import Tuple
 from cryptography.hazmat.backends import default_backend
 import base64
+from abc import ABC, abstractmethod
+
+from jwt import algorithms
+from app.utils.rands import rand_str
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 
-def eddsa_keypair()->Tuple[ed25519.Ed25519PrivateKey, ed25519.Ed25519PublicKey]:
+def hs_keypair(key_size: int = 32) -> Tuple[str,str]:
+    key = rand_str(key_size)
+    return key, key
+
+def eddsa_keypair()->Tuple[str,str]:
     priv = ed25519.Ed25519PrivateKey.generate()
     pub = priv.public_key()
-    return priv, pub
-
-def eddsa_keypair_pem()->Tuple[str, str]:
-    priv, pub = eddsa_keypair()
     priv_pem = priv.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,  # standard PKCS#8
@@ -26,32 +29,44 @@ def eddsa_keypair_pem()->Tuple[str, str]:
     )
     return priv_pem.decode('utf-8'), pub_pem.decode('utf-8')
 
-def eddsa_sign(private_key_pem: str, message: bytes, encode_type: str = 'base64') -> str:
-    if not private_key_pem.startswith("----"):
-        private_key_pem = f"-----BEGIN PRIVATE KEY-----\n{private_key_pem}\n-----END PRIVATE KEY-----"
-    priv_key = serialization.load_pem_private_key(private_key_pem.encode('utf-8'), password=None, backend=default_backend())
-    signature = priv_key.sign(message)
-    if encode_type == 'hex':
-        return signature.hex()
-    elif encode_type == 'base64':
-        return base64.b64encode(signature).decode('utf-8')
-    elif not encode_type or encode_type == 'bytes':
-        return signature
 
+def rs_keypair(key_size: int = 2048) -> Tuple[str,str]:
+    priv = rsa.generate_private_key(key_size)
+    pub = priv.public_key()
+    priv_pem = priv.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,  # standard PKCS#8
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    pub_pem = pub.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,  # X.509 SPKI
+    )
+    return priv_pem.decode('utf-8'), pub_pem.decode('utf-8')
 
-def eddsa_verify(public_key_pem: str, message: bytes, signature: bytes) -> bool:
-    if not public_key_pem.startswith("----"):
-        public_key_pem = f"-----BEGIN PUBLIC KEY-----\n{public_key_pem}\n-----END PUBLIC KEY-----"
-    pub_key = serialization.load_pem_public_key(public_key_pem.encode('utf-8'), backend=default_backend())
-    try:
-        pub_key.verify(signature, message)
-        return True
-    except Exception:
-        return False
+def es_keypair(key_size: int = 256) -> Tuple[str,str]:
+    if key_size == 256:
+        curve = ec.SECP256R1()
+    elif key_size == 384:
+        curve = ec.SECP384R1()
+    elif key_size == 521:
+        curve = ec.SECP521R1()
+    elif key_size == 224:
+        curve = ec.SECP224R1()
+    elif key_size == 192:
+        curve = ec.SECP192R1()
+    else:
+        raise ValueError(f"Invalid key size: {key_size}")
+    priv = ec.generate_private_key(curve)
+    pub = priv.public_key()
+    priv_pem = priv.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,  # standard PKCS#8
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    pub_pem = pub.public_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo,  # X.509 SPKI
+    )
+    return priv_pem.decode('utf-8'), pub_pem.decode('utf-8')
 
-if __name__ == "__main__":
-    priv_pem, pub_pem = eddsa_keypair_pem()
-    print(priv_pem)
-    print(pub_pem)
-    signature = eddsa_sign(priv_pem, b"hello", encode_type="bytes")
-    print(eddsa_verify(pub_pem, b"hello", signature))

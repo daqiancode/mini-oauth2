@@ -1,23 +1,40 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from enum import Enum
 
 redis_prefix = "mini_oauth2/"
 auth_prefix = redis_prefix + "auth/"
 signup_prefix = redis_prefix + "signup/"
 
+class Provider(str, Enum):
+    google = "google"
+    apple = "apple"
+    github = "github"
+    linkedin = "linkedin"
+    wechat = "wechat"
+
+
 class ResponseType(str, Enum):
     code = "code"
+    password = "password"
+    token = "token"
+    id_token = "id_token"
 
 class GrantType(str, Enum):
     authorization_code = "authorization_code"
+    password = "password"
+    implicit = "implicit"
+    client_credentials = "client_credentials"
+    refresh_token = "refresh_token"
 
 
 class SigninRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")
     response_type: ResponseType
     client_id: str
     redirect_uri: str
     scope: str|None = None
     state: str|None = None
+    provider: Provider|None = None
 
 
 from app.drivers.cache import redis_client

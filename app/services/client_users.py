@@ -12,7 +12,7 @@ class ClientUserPost(BaseModel):
     openid: str|None = None
     name: str|None = None
     avatar: str|None = None
-    source: str|None = None
+    provider: str|None = None
     # roles: str|None = None
     # disabled: bool|None = None
 
@@ -55,26 +55,26 @@ class ClientUsers:
             user = result.scalar_one_or_none()
             
             if not user:
-                user = User(name=form.name, email=form.email,mobile=form.mobile, openid=form.openid, avatar=form.avatar, source=form.source)
+                user = User(name=form.name, email=form.email,mobile=form.mobile, openid=form.openid, avatar=form.avatar, provider=form.provider)
                 session.add(user)
             else:
                 user.name = form.name
                 user.avatar = form.avatar
-                user.source = form.source
+                user.provider = form.provider
 
             # check client user
             query = select(ClientUser).where(ClientUser.client_id == form.client_id, ClientUser.user_id == user.id)
             result = await session.execute(query)
             client_user = result.scalar_one_or_none()
             if not client_user:
-                client_user = ClientUser(client_id=form.client_id, user_id=user.id, roles=form.roles, disabled=form.disabled)
+                client_user = ClientUser(client_id=form.client_id, user_id=user.id)
                 session.add(client_user)
             # else:
             #     client_user.roles = form.roles
             #     client_user.disabled = False
             return client_user
         
-    async def get_user_info(self ,user_id:str, client_id:str):
+    async def get_user_info(self ,user_id:str, client_id:str)->dict:
         async with db_readonly() as session:
             query = select(ClientUser).where(ClientUser.user_id == user_id, ClientUser.client_id == client_id)
             result = await session.execute(query)
@@ -84,13 +84,13 @@ class ClientUsers:
             query = select(User).where(User.id == client_user.user_id)
             result = await session.execute(query)
             user= result.scalar_one_or_none()
-            user_dict = user._asdict()
+            user_dict = user.__dict__
             user_dict["client_id"] = client_user.client_id
             user_dict["roles"] = client_user.roles
             user_dict["disabled"] = client_user.disabled
             user_dict["created_at"] = client_user.created_at
             user_dict["updated_at"] = client_user.updated_at
-            return user
+            return user_dict
             
         
     async def get(self ,client_user_id:str):
