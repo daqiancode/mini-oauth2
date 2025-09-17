@@ -62,7 +62,7 @@ async def signin_post(form: Annotated[SigninPostRequest, Form()], query: Annotat
     user = await Users().get(user_id)
     if user.disabled:
         return templates.TemplateResponse("signin.html", {'request': request,'query': encode_url_params({ **request.query_params }) , 'error': 'User disabled' , 'client': client})
-    code = await set_code({ **request.query_params }, user_id)
+    code = await set_code({ **request.query_params }, user_id, client.jwt_expires_in_hours)
     # expire 10 minutes
 
     # issue code to redis
@@ -86,7 +86,8 @@ async def callback(request: Request):
     user = await provider.get_userinfo(token['access_token'])
     # user_id = await Users().save_or_update(user['name'], user['picture'], email=user['email'], provider=context['provider'])
     client_user = await ClientUsers().save_or_update(ClientUserPost(client_id=context['client_id'], email=user.get('email'), mobile=user.get('mobile'), openid=user.get('openid'), name=user.get('name'), avatar=user.get('picture'), provider=context['provider']))
-    code = await set_code(context, client_user.user_id)
+    client = await Clients().get(context['client_id'])
+    code = await set_code(context, client_user.user_id, client.jwt_expires_in_hours)
     return RedirectResponse(set_url_params(context['redirect_uri'], {"code": code, 'state': context['state']}))
 
 
@@ -149,17 +150,18 @@ async def signout(jwt_payload: dict = Depends(get_jwt_payload)):
     return {"message": "signout success"}
 
 
-@router.get("/validate" , description="validate token")
+@router.get("/introspect" , description="OIDC introspect")
 async def validate(jwt_payload: dict = Depends(get_jwt_payload)):
     try:
         jti = jwt_payload['jti']
         client_id = jwt_payload['aud']
         if await get_invalid_jti(jti):
-            return {"valid": False}
+            return {"active": False}
         client = await Clients().get(client_id)
         if not client or client.disabled:
-            return {"valid": False}
-        return {"valid": True}
+            return {"active": False}
+        jwt_payload['active'] = True
+        return jwt_payload
     except Exception as e:
         raise HTTPException(status_code=401, detail="invalid token")
 
@@ -191,5 +193,22 @@ async def _issue_token(user_id: str, client_id: str,client_secret: str|None = No
     user = await ClientUsers().get_user_info(user_id, client_id)
     if user.get('disabled'):
         raise HTTPException(status_code=400, detail="user disabled")
-    access_token = create_access_token(client.jwt_private_key, user_id, client_id, user.get('roles') ,settings.JWT_EXPIRES_IN_HOURS ,client.jwt_algorithm)
-    return {"access_token": access_token, 'expires_in': settings.JWT_EXPIRES_IN_HOURS * 60 * 60, "token_type": "Bearer"}
+    access_token = create_access_token(client.jwt_private_key, user_id, client_id, user.get('roles') ,client.jwt_expires_in_hours ,client.jwt_algorithm)
+    return {"access_token": access_token, 'expires_in': client.jwt_expires_in_hours * 60 * 60, "token_type": "Bearer"}
+
+from jwcrypto import jwk
+
+@router.get("/jwks" , description="jwks")
+async def jwks():
+    clients = await Clients().list(disabled=False)
+    keys = []
+    for client in clients:
+        if client.jwt_algorithm.startswith("HS"):
+            continue
+        key = jwk.JWK.from_pem(client.jwt_public_key.encode('utf-8'))
+        public_jwk = key.export_public(as_dict=True)
+        public_jwk['kid'] = client.id
+        # public_jwk['public_key'] = client.jwt_public_key
+        keys.append(public_jwk)
+    return {"keys": keys}
+

@@ -93,3 +93,11 @@ class Clients:
                 raise HTTPException(status_code=404, detail="Client not found")
             client.client_secret = rand_str(32,True)
             return client
+
+    async def list(self, disabled: bool = None):
+        async with db_readonly() as session:
+            stmt = select(Client)
+            if disabled is not None:
+                stmt = stmt.where(Client.disabled == disabled)
+            result = await session.execute(stmt)
+            return result.scalars().all()

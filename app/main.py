@@ -68,13 +68,16 @@ async def configuration():
         "authorization_endpoint": f"{prefix}/signin",
         "token_endpoint": f"{prefix}/token",
         "userinfo_endpoint": f"{prefix}/userinfo",
+        'end_session_endpoint': f"{prefix}/signout",
         'revocation_endpoint': f"{prefix}/signout",
-        'introspection_endpoint': f"{prefix}/validate",
+        'introspection_endpoint': f"{prefix}/introspect",
+        'registration_endpoint': f"{prefix}/signup",
+        'jwks_uri': f"{prefix}/jwks",
         'response_modes_supported': ['query', 'fragment', 'form_post'],
         'grant_types_supported': ['authorization_code','implicit'],
         'algorithms_supported': supported_algorithms,
         'subject_types_supported': ['public'],
-        'response_types_supported': ['code']
+        'response_types_supported': ['code'],
     }
 
 @app.get("/health", tags=["Health"])

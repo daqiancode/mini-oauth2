@@ -75,30 +75,35 @@ class SignupRequest(BaseModel):
 
 @router.post("/signup", description="signup")
 async def signup(form: Annotated[SignupRequest, Form()], request: Request, query: Annotated[SigninRequest, Query()]):
-    # check verify_code is valid from redis
-    code = (await redis_client.get(signup_prefix + 'verify_code/code/' + form.email)).decode()
-    if code != form.verify_code:
-        raise HTTPException(status_code=400, detail="invalid verification code")
-    # check email is not used
-    if await Users().get_user_by_email(form.email):
-        raise HTTPException(status_code=400, detail="email is already used")
+    try:
+        # check verify_code is valid from redis
+        code = (await redis_client.get(signup_prefix + 'verify_code/code/' + form.email))
+        if code != form.verify_code:
+            raise HTTPException(status_code=400, detail="invalid verification code")
+        # check email is not used
+        if await Users().get_user_by_email(form.email):
+            raise HTTPException(status_code=400, detail="email is already used")
 
-    client = await check_client(query.client_id, query.redirect_uri)
-    # create user
-    user = await Users().signup(form.email, form.password, form.name, query.client_id)
-    # return access_token
+        client = await check_client(query.client_id, query.redirect_uri)
+        # create user
+        user = await Users().signup(form.name,form.email, form.password, query.client_id)
+        # return access_token
 
-    code = await set_code({ **request.query_params }, user.id)
-    # redirect to redirect_uri with code with GET
-    return RedirectResponse(set_url_params(query.redirect_uri, {"code": code,'state':query.state} , remove_none=False), status_code=302)
+        code = await set_code({ **request.query_params }, user.id, client.jwt_expires_in_hours)
+            # redirect to redirect_uri with code with GET
+        return RedirectResponse(set_url_params(query.redirect_uri, {"code": code,'state':query.state} , remove_none=False), status_code=302)
+    except Exception as e:
+        log.error(e)
+        # raise HTTPException(status_code=500, detail="signup failed")
+        return templates.TemplateResponse("signup.html", {'request': request,'query': encode_url_params({**request.query_params}), 'client': client, 'error': str(e)})
 
 
 
-class SignupPageRequest(BaseModel):
-    client_id: str
+# class SignupPageRequest(BaseModel):
+#     client_id: str
 
 @router.get("/signup", description="signup page")
-async def signup_page(request: Request,qs: Annotated[SignupPageRequest, Query()]):
+async def signup_page(request: Request,qs: Annotated[SigninRequest, Query()]):
     client = await Clients().get(qs.client_id)
     if not client:
         raise HTTPException(status_code=400, detail="client not found")

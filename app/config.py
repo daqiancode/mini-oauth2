@@ -17,10 +17,10 @@ class Settings(BaseSettings):
     API_KEY_HEADER: str = "X-API-Key"
     API_KEYS: list[str] | None = None
     #  replace empty string with None
-    JWT_PRIVATE_KEY: str 
-    JWT_PUBLIC_KEY: str 
-    JWT_EXPIRES_IN_HOURS: int = 24
-    JWT_ALGORITHM: str = "EdDSA"
+    # JWT_PRIVATE_KEY: str 
+    # JWT_PUBLIC_KEY: str 
+    # JWT_EXPIRES_IN_HOURS: int = 24
+    # JWT_ALGORITHM: str = "EdDSA"
 
     
     REDIS_URL: str

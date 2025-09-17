@@ -38,7 +38,7 @@ class Users:
             # check email 
             result = await session.execute(select(User).filter(User.email == email))
             if result.scalar_one_or_none() is not None:
-                raise HTTPException(status_code=400, detail="User already exists")
+                raise HTTPException(status_code=400, detail="User already exists, email: " + email)
             user = User(name=name, email=email, password=self.hash_password(password), provider=UserSource.local)
             session.add(user)
             await session.flush()

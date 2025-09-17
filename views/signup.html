@@ -138,6 +138,52 @@
       color: #555;
       max-width: 280px;
     }
+
+    /* Add missing CSS for status messages */
+    .status-msg {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .status-success {
+      background-color: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .status-error {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .error-message {
+      background-color: #fee2e2;
+      color: #991b1b;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border: 1px solid #fca5a5;
+    }
+
+    .signin-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .signin-link a {
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+
+    .signin-link a:hover {
+      color: #4f46e5;
+      text-decoration: underline;
+    }
   </style>
 </head>
 
@@ -146,21 +192,29 @@
     <!-- Signup Section -->
     <div class="signup">
       <h1>Create Account</h1>
+      
+      <!-- Add error display -->
+      {% if error %}
+      <div class="error-message">
+        {{ error }}
+      </div>
+      {% endif %}
+      
       <form action="/signup?{{ query|safe }}" method="POST">
         <div class="form-group">
           <label for="name">Full Name</label>
-          <input name="name" type="text" id="name" placeholder="Enter your full name" />
+          <input name="name" type="text" id="name" placeholder="Enter your full name" required />
         </div>
 
         <div class="form-group">
           <label for="email">Email Address</label>
-          <input name="email" type="email" id="email" placeholder="Enter your email" />
+          <input name="email" type="email" id="email" placeholder="Enter your email" required />
         </div>
 
         <div class="form-group">
           <label for="captcha">Verification Code (CAPTCHA)</label>
           <div class="captcha-box">
-            <input name="captcha" type="text" id="captcha" placeholder="Enter the code" />
+            <input name="captcha" type="text" id="captcha" placeholder="Enter the code" required />
             <!-- Captcha from URL -->
             <img src="/signup/verify_code/captcha" alt="CAPTCHA" class="captcha-img"
               onclick="this.src='/signup/verify_code/captcha?'+Date.now()" title="Click to refresh" />
@@ -169,15 +223,23 @@
         </div>
         <div class="form-group">
           <label for="email-code">Email Verification Code</label>
-          <input name="verify_code" type="text" id="email-code" placeholder="Enter the code sent to your email" />
+          <input name="verify_code" type="text" id="email-code" placeholder="Enter the code sent to your email" required />
         </div>
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input name="password" type="password" id="password" placeholder="Enter your password" />
+          <input name="password" type="password" id="password" placeholder="Enter your password" required />
         </div>
 
+        <!-- Add status message container -->
+        <div id="status"></div>
+
         <button type="submit">Sign Up</button>
+        
+        <!-- Add sign in link -->
+        <div class="signin-link">
+          <a href="/signin?{{ query|safe }}">Already have an account? Sign In</a>
+        </div>
       </form>
     </div>
 

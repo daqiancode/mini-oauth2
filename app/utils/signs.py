@@ -31,7 +31,7 @@ def eddsa_keypair()->Tuple[str,str]:
 
 
 def rs_keypair(key_size: int = 2048) -> Tuple[str,str]:
-    priv = rsa.generate_private_key(key_size)
+    priv = rsa.generate_private_key(public_exponent=65537, key_size=key_size)
     pub = priv.public_key()
     priv_pem = priv.private_bytes(
         encoding=serialization.Encoding.PEM,

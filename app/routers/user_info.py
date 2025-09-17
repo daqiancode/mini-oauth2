@@ -19,7 +19,20 @@ oauth2_bearer = OAuth2AuthorizationCodeBearer(authorizationUrl=f"{settings.EXTER
 async def userinfo(user_id = Depends(get_user_id) , client_id = Depends(get_client_id)):
     user = await ClientUsers().get_user_info(user_id, client_id)
     if user:
-        return user
+        return {
+            "id": user_id,
+            "sub": user_id,
+            "name": user.get('name'),
+            "email": user.get('email'),
+            "mobile": user.get('mobile'),
+            "openid": user.get('openid'),
+            "provider": user.get('provider'),
+            "avatar": user.get('avatar'),
+            "roles": user.get('roles'),
+            "disabled": user.get('disabled'),
+            "created_at": user.get('created_at'),
+            "updated_at": user.get('updated_at')
+        }
     else:
         raise HTTPException(status_code=401, detail="Unauthorized")
 

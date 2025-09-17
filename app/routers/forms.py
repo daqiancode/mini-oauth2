@@ -56,9 +56,9 @@ async def delete_state(state: str):
     await redis_client.delete(auth_prefix + 'state/' + state)
 
 
-async def set_code(context: dict, user_id: int|str):
+async def set_code(context: dict, user_id: int|str, expires_in_hours: int):
     code = rand_str(16)
-    await redis_client.set(auth_prefix+'code/' + code, json.dumps({'context':context, 'user_id':user_id}), ex=settings.JWT_EXPIRES_IN_HOURS * 60 * 60)
+    await redis_client.set(auth_prefix+'code/' + code, json.dumps({'context':context, 'user_id':user_id}), ex=expires_in_hours * 60 * 60)
     return code
 
 
@@ -70,9 +70,9 @@ async def delete_code(code: str):
     await redis_client.delete(auth_prefix + 'code/' + code)
 
 
-async def put_invalid_jti(jti: str , expires_in_seconds: int = settings.JWT_EXPIRES_IN_HOURS * 60 * 60):
+async def put_invalid_jti(jti: str , expires_in_seconds: int):
     await redis_client.set(auth_prefix + 'invalid_jti/' + jti, '1', ex=expires_in_seconds)
 
 async def get_invalid_jti(jti: str)->bool:
     data = await redis_client.get(auth_prefix + 'invalid_jti/' + jti)
-    return data == b'1'
+    return data == '1'

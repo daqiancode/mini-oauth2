@@ -3,13 +3,15 @@ import datetime
 from app.utils.rands import rand_str
 
 
-def sign_jwt(payload: dict, private_key_pem: str, algorithm: str = "EdDSA") -> str:
-    return jwt.encode(payload, private_key_pem, algorithm=algorithm)
+def sign_jwt(payload: dict, private_key_pem: str, algorithm: str = "EdDSA",headers: dict = None) -> str:
+    return jwt.encode(payload, private_key_pem, algorithm=algorithm, headers=headers)
 
 def verify_jwt(token: str, public_key_pem: str) -> dict:
     # get the algorithm from jwt token header
-    algorithm = jwt.get_unverified_header(token).get('alg')
-    return jwt.decode(token, public_key_pem, algorithms=algorithm)
+    header = jwt.get_unverified_header(token)
+    algorithm = header.get('alg')
+    audience = header.get('kid')
+    return jwt.decode(token, public_key_pem, algorithms=algorithm , audience=audience)
 
 def create_access_token(private_key: str , user_id: str , client_id: str , roles: str ,expire_in_hours: int ,algorithm: str = "EdDSA",**kwargs):
     payload = {
@@ -22,7 +24,7 @@ def create_access_token(private_key: str , user_id: str , client_id: str , roles
         payload['roles'] = roles
     if kwargs:
         payload.update(kwargs)
-    return sign_jwt(payload,private_key, algorithm=algorithm)
+    return sign_jwt(payload,private_key, algorithm=algorithm , headers={"kid": client_id})
 
 from typing import Tuple
 
@@ -74,5 +76,4 @@ def create_key_pair(algorithm:str) -> Tuple[str, str]:
         return eddsa_keypair()
     else:
         raise ValueError(f"Invalid algorithm: {algorithm}")
-
 
